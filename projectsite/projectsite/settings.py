@@ -25,8 +25,7 @@ SECRET_KEY = 'django-insecure-jab-4*$yix8-k5ww70@-ob%wj=^5v459o9cwa8%k2q@slp+%vo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['rosevent.pythonanywhere.com', '127.0.0.1']
 
 # Application definition
 
