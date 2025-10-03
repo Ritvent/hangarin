@@ -16,7 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from hangarinorg.views import HomePageView, TaskListView, TodoListView
+from hangarinorg import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.HomePageView.as_view(), name='base'),
+    path('todo/', views.TodoListView.as_view(), name='todo_list'),
+    
+    # Category-specific task URLs
+    path('tasks/personal/', views.PersonalTasksView.as_view(), name='personal_tasks'),
+    path('tasks/projects/', views.ProjectTasksView.as_view(), name='project_tasks'),
+    path('tasks/school/', views.SchoolTasksView.as_view(), name='school_tasks'),
+    path('tasks/work/', views.WorkTasksView.as_view(), name='work_tasks'),
+    path('tasks/finance/', views.FinanceTasksView.as_view(), name='finance_tasks'),
 ]

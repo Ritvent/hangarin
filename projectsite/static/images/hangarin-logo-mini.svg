@@ -1,0 +1,12 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <ns0:style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap');
+    text { 
+      font-family: 'Rubik', sans-serif; 
+      font-weight: 400; 
+    }
+  </ns0:style>
+  <ns0:text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="720.0" fill="#FFFFFF">
+    H
+  </ns0:text>
+</ns0:svg>
