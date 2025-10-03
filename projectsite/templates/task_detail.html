@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ task.title }} - Task Details{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="card-title mb-0">
+            <i class="mdi mdi-clipboard-text mr-2"></i>{{ task.title }}
+          </h4>
+          <div>
+            {% if task.category.category_name == 'Personal' %}
+              <a href="{% url 'personal_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
+                <i class="mdi mdi-pencil"></i> Edit
+              </a>
+              <a href="{% url 'personal_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="mdi mdi-delete"></i> Delete
+              </a>
+            {% elif task.category.category_name == 'Projects' %}
+              <a href="{% url 'project_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
+                <i class="mdi mdi-pencil"></i> Edit
+              </a>
+              <a href="{% url 'project_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="mdi mdi-delete"></i> Delete
+              </a>
+            {% elif task.category.category_name == 'School' %}
+              <a href="{% url 'school_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
+                <i class="mdi mdi-pencil"></i> Edit
+              </a>
+              <a href="{% url 'school_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="mdi mdi-delete"></i> Delete
+              </a>
+            {% elif task.category.category_name == 'Work' %}
+              <a href="{% url 'work_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
+                <i class="mdi mdi-pencil"></i> Edit
+              </a>
+              <a href="{% url 'work_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="mdi mdi-delete"></i> Delete
+              </a>
+            {% elif task.category.category_name == 'Finance' %}
+              <a href="{% url 'finance_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
+                <i class="mdi mdi-pencil"></i> Edit
+              </a>
+              <a href="{% url 'finance_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="mdi mdi-delete"></i> Delete
+              </a>
+            {% else %}
+              <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
+                <i class="mdi mdi-pencil"></i> Edit
+              </a>
+              <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="mdi mdi-delete"></i> Delete
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Description</h5>
+                <p class="card-text">{{ task.description|default:"No description provided." }}</p>
+                
+                <div class="row mt-4">
+                  <div class="col-sm-6">
+                    <p><strong>Status:</strong> 
+                      {% if task.status == 'Completed' %}
+                        <span class="badge badge-success">{{ task.status }}</span>
+                      {% elif task.status == 'In Progress' %}
+                        <span class="badge badge-warning">{{ task.status }}</span>
+                      {% else %}
+                        <span class="badge badge-secondary">{{ task.status }}</span>
+                      {% endif %}
+                    </p>
+                  </div>
+                  <div class="col-sm-6">
+                    <p><strong>Priority:</strong>
+                      {% if task.priority.priority_name == 'High' or task.priority.priority_name == 'Critical' %}
+                        <span class="badge badge-danger">{{ task.priority.priority_name }}</span>
+                      {% elif task.priority.priority_name == 'Medium' %}
+                        <span class="badge badge-warning">{{ task.priority.priority_name }}</span>
+                      {% else %}
+                        <span class="badge badge-success">{{ task.priority.priority_name }}</span>
+                      {% endif %}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-sm-6">
+                    <p><strong>Category:</strong> 
+                      <span class="badge badge-primary">{{ task.category.category_name }}</span>
+                    </p>
+                  </div>
+                  <div class="col-sm-6">
+                    <p><strong>Deadline:</strong> {{ task.deadline|date:"M d, Y H:i" }}</p>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-sm-6">
+                    <p><strong>Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
+                  </div>
+                  <div class="col-sm-6">
+                    <p><strong>Last Updated:</strong> {{ task.updated_at|date:"M d, Y H:i" }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <!-- Notes Section -->
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title mb-0">Notes</h6>
+                  <a href="{% url 'note_create' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="mdi mdi-plus"></i> Add Note
+                  </a>
+                </div>
+                {% for note in task.note_set.all %}
+                  <div class="border-bottom pb-2 mb-2">
+                    <small class="text-muted">{{ note.created_at|date:"M d, H:i" }}</small>
+                    <p class="mb-1">{{ note.content }}</p>
+                    <div class="text-right">
+                      <a href="{% url 'note_edit' note.pk %}" class="text-info mr-2">
+                        <i class="mdi mdi-pencil"></i>
+                      </a>
+                      <a href="{% url 'note_delete' note.pk %}" class="text-danger">
+                        <i class="mdi mdi-delete"></i>
+                      </a>
+                    </div>
+                  </div>
+                {% empty %}
+                  <p class="text-muted">No notes yet.</p>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Subtasks Section -->
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="card-title mb-0">Subtasks</h6>
+                  <a href="{% url 'subtask_create' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="mdi mdi-plus"></i> Add Subtask
+                  </a>
+                </div>
+                {% for subtask in task.subtasks.all %}
+                  <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                    <div>
+                      <p class="mb-0">{{ subtask.title }}</p>
+                      {% if subtask.status == 'Completed' %}
+                        <small class="badge badge-success">{{ subtask.status }}</small>
+                      {% elif subtask.status == 'In Progress' %}
+                        <small class="badge badge-warning">{{ subtask.status }}</small>
+                      {% else %}
+                        <small class="badge badge-secondary">{{ subtask.status }}</small>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <a href="{% url 'subtask_edit' subtask.pk %}" class="text-info mr-2">
+                        <i class="mdi mdi-pencil"></i>
+                      </a>
+                      <a href="{% url 'subtask_delete' subtask.pk %}" class="text-danger">
+                        <i class="mdi mdi-delete"></i>
+                      </a>
+                    </div>
+                  </div>
+                {% empty %}
+                  <p class="text-muted">No subtasks yet.</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <a href="{% url 'base' %}" class="btn btn-light">
+            <i class="mdi mdi-arrow-left"></i> Back to Tasks
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

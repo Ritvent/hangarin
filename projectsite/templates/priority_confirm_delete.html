@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Priority - {{ priority.priority_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 grid-margin stretch-card mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title text-danger">
+          <i class="mdi mdi-alert-circle mr-2"></i>Delete Priority
+        </h4>
+        <p class="card-description">Are you sure you want to delete this priority?</p>
+
+        <div class="alert alert-danger" role="alert">
+          <i class="mdi mdi-alert mr-2"></i>
+          <strong>Danger:</strong> This action cannot be undone. All tasks with this priority will also be deleted.
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">
+              {% if priority.priority_name == 'High' or priority.priority_name == 'Critical' %}
+                <span class="badge badge-danger">{{ priority.priority_name }}</span>
+              {% elif priority.priority_name == 'Medium' %}
+                <span class="badge badge-warning">{{ priority.priority_name }}</span>
+              {% else %}
+                <span class="badge badge-success">{{ priority.priority_name }}</span>
+              {% endif %}
+            </h5>
+            <p><strong>Created:</strong> {{ priority.created_at|date:"M d, Y H:i" }}</p>
+            
+            {% if priority.task_set.count > 0 %}
+              <div class="alert alert-warning mt-3" role="alert">
+                <strong>{{ priority.task_set.count }} task{{ priority.task_set.count|pluralize }} with this priority will be permanently deleted:</strong>
+                <ul class="mb-0 mt-2">
+                  {% for task in priority.task_set.all|slice:":5" %}
+                    <li>{{ task.title }}</li>
+                  {% endfor %}
+                  {% if priority.task_set.count > 5 %}
+                    <li><em>... and {{ priority.task_set.count|add:"-5" }} more task{{ priority.task_set.count|add:"-5"|pluralize }}</em></li>
+                  {% endif %}
+                </ul>
+              </div>
+            {% else %}
+              <p class="text-muted">No tasks are using this priority.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <button type="submit" class="btn btn-danger mr-2">
+              <i class="mdi mdi-delete mr-1"></i>Yes, Delete Priority
+            </button>
+            <a href="{% url 'priority_list' %}" class="btn btn-light">
+              <i class="mdi mdi-arrow-left mr-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

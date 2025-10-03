@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categories - Hangarin{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="card-title mb-0">
+            <i class="mdi mdi-folder-outline mr-2"></i>Task Categories
+          </h4>
+          <a href="{% url 'category_create' %}" class="btn btn-primary">
+            <i class="mdi mdi-plus"></i> Add Category
+          </a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Category Name</th>
+                <th>Tasks Count</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for category in categories %}
+                <tr>
+                  <td>
+                    <a href="{% url 'category_detail' category.pk %}" class="text-primary">
+                      <i class="mdi mdi-folder mr-2"></i>{{ category.category_name }}
+                    </a>
+                  </td>
+                  <td>
+                    <span class="badge badge-outline-primary">{{ category.task_set.count }} task{{ category.task_set.count|pluralize }}</span>
+                  </td>
+                  <td>{{ category.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    <a href="{% url 'category_detail' category.pk %}" class="btn btn-outline-info btn-sm mr-1">
+                      <i class="mdi mdi-eye"></i>
+                    </a>
+                    <a href="{% url 'category_edit' category.pk %}" class="btn btn-outline-warning btn-sm mr-1">
+                      <i class="mdi mdi-pencil"></i>
+                    </a>
+                    <a href="{% url 'category_delete' category.pk %}" class="btn btn-outline-danger btn-sm">
+                      <i class="mdi mdi-delete"></i>
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <i class="mdi mdi-folder-plus display-4 d-block mb-3"></i>
+                    No categories found. <a href="{% url 'category_create' %}">Create your first category</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

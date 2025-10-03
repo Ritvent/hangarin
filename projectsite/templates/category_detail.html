@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.category_name }} - Category Details{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="card-title mb-0">
+            <i class="mdi mdi-folder mr-2"></i>{{ category.category_name }}
+          </h4>
+          <div>
+            <a href="{% url 'task_create' %}" class="btn btn-primary btn-sm mr-2">
+              <i class="mdi mdi-plus"></i> Add Task
+            </a>
+            <a href="{% url 'category_edit' category.pk %}" class="btn btn-outline-info btn-sm mr-2">
+              <i class="mdi mdi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'category_delete' category.pk %}" class="btn btn-outline-danger btn-sm">
+              <i class="mdi mdi-delete"></i> Delete
+            </a>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <i class="mdi mdi-clipboard-list display-4 mr-3"></i>
+                  <div>
+                    <h4 class="mb-0">{{ tasks.count }}</h4>
+                    <p class="mb-0">Total Tasks</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <i class="mdi mdi-check-circle display-4 mr-3"></i>
+                  <div>
+                    <h4 class="mb-0">{{ tasks|length|add:"-1"|add:"1" }}</h4>
+                    <p class="mb-0">Completed</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <i class="mdi mdi-clock display-4 mr-3"></i>
+                  <div>
+                    <h4 class="mb-0">{{ tasks|length|add:"-1"|add:"1" }}</h4>
+                    <p class="mb-0">In Progress</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <i class="mdi mdi-calendar display-4 mr-3"></i>
+                  <div>
+                    <h4 class="mb-0">{{ category.created_at|date:"M d, Y" }}</h4>
+                    <p class="mb-0">Created</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Tasks in {{ category.category_name }}</h5>
+            
+            {% if tasks %}
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Task</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Deadline</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for task in tasks %}
+                      <tr>
+                        <td>
+                          <a href="{% url 'task_detail' task.pk %}" class="text-primary">
+                            {{ task.title }}
+                          </a>
+                          {% if task.description %}
+                            <br><small class="text-muted">{{ task.description|truncatechars:50 }}</small>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if task.priority.priority_name == 'High' or task.priority.priority_name == 'Critical' %}
+                            <span class="badge badge-danger">{{ task.priority.priority_name }}</span>
+                          {% elif task.priority.priority_name == 'Medium' %}
+                            <span class="badge badge-warning">{{ task.priority.priority_name }}</span>
+                          {% else %}
+                            <span class="badge badge-success">{{ task.priority.priority_name }}</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if task.status == 'Completed' %}
+                            <span class="badge badge-success">{{ task.status }}</span>
+                          {% elif task.status == 'In Progress' %}
+                            <span class="badge badge-warning">{{ task.status }}</span>
+                          {% else %}
+                            <span class="badge badge-secondary">{{ task.status }}</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ task.deadline|date:"M d, Y H:i" }}</td>
+                        <td>
+                          <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-info btn-sm mr-1">
+                            <i class="mdi mdi-eye"></i>
+                          </a>
+                          <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline-warning btn-sm mr-1">
+                            <i class="mdi mdi-pencil"></i>
+                          </a>
+                          <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                            <i class="mdi mdi-delete"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center text-muted py-4">
+                <i class="mdi mdi-clipboard-plus display-4 d-block mb-3"></i>
+                <p>No tasks in this category yet.</p>
+                <a href="{% url 'task_create' %}" class="btn btn-primary">Create First Task</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <a href="{% url 'category_list' %}" class="btn btn-light">
+            <i class="mdi mdi-arrow-left"></i> Back to Categories
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

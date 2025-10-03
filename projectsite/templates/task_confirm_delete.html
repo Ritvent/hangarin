@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Task - {{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 grid-margin stretch-card mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title text-danger">
+          <i class="mdi mdi-alert-circle mr-2"></i>Delete Task
+        </h4>
+        <p class="card-description">Are you sure you want to delete this task?</p>
+
+        <div class="alert alert-warning" role="alert">
+          <i class="mdi mdi-alert mr-2"></i>
+          <strong>Warning:</strong> This action cannot be undone. All related notes and subtasks will also be deleted.
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">{{ task.title }}</h5>
+            <p class="card-text">{{ task.description|default:"No description provided." }}</p>
+            
+            <div class="row">
+              <div class="col-sm-6">
+                <p><strong>Category:</strong> {{ task.category.category_name }}</p>
+                <p><strong>Priority:</strong> {{ task.priority.priority_name }}</p>
+              </div>
+              <div class="col-sm-6">
+                <p><strong>Status:</strong> {{ task.status }}</p>
+                <p><strong>Deadline:</strong> {{ task.deadline|date:"M d, Y H:i" }}</p>
+              </div>
+            </div>
+
+            {% if task.note_set.count > 0 %}
+              <p><strong>Notes:</strong> {{ task.note_set.count }} note{{ task.note_set.count|pluralize }} will be deleted</p>
+            {% endif %}
+            
+            {% if task.subtasks.count > 0 %}
+              <p><strong>Subtasks:</strong> {{ task.subtasks.count }} subtask{{ task.subtasks.count|pluralize }} will be deleted</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <button type="submit" class="btn btn-danger mr-2">
+              <i class="mdi mdi-delete mr-1"></i>Yes, Delete Task
+            </button>
+            <a href="{% url 'task_detail' task.pk %}" class="btn btn-light">
+              <i class="mdi mdi-arrow-left mr-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

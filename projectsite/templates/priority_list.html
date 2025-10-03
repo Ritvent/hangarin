@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Priorities - Hangarin{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 grid-margin stretch-card mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="card-title mb-0">
+            <i class="mdi mdi-flag-outline mr-2"></i>Task Priorities
+          </h4>
+          <a href="{% url 'priority_create' %}" class="btn btn-primary">
+            <i class="mdi mdi-plus"></i> Add Priority
+          </a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Priority Name</th>
+                <th>Tasks Count</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for priority in priorities %}
+                <tr>
+                  <td>
+                    {% if priority.priority_name == 'High' or priority.priority_name == 'Critical' %}
+                      <span class="badge badge-danger">{{ priority.priority_name }}</span>
+                    {% elif priority.priority_name == 'Medium' %}
+                      <span class="badge badge-warning">{{ priority.priority_name }}</span>
+                    {% else %}
+                      <span class="badge badge-success">{{ priority.priority_name }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-outline-primary">{{ priority.task_set.count }} task{{ priority.task_set.count|pluralize }}</span>
+                  </td>
+                  <td>{{ priority.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    <a href="{% url 'priority_edit' priority.pk %}" class="btn btn-outline-warning btn-sm mr-1">
+                      <i class="mdi mdi-pencil"></i>
+                    </a>
+                    <a href="{% url 'priority_delete' priority.pk %}" class="btn btn-outline-danger btn-sm">
+                      <i class="mdi mdi-delete"></i>
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <i class="mdi mdi-flag-plus display-4 d-block mb-3"></i>
+                    No priorities found. <a href="{% url 'priority_create' %}">Create your first priority</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
