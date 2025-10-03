@@ -21,4 +21,5 @@ from hangarinorg import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.HomePageView.as_view(), name='home'),
+    path('todo/', views.TodoListView.as_view(), name='todo_list'),
 ]
