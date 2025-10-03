@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Subtask - {{ subtask.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 grid-margin stretch-card mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title text-danger">
+          <i class="mdi mdi-alert-circle mr-2"></i>Delete Subtask
+        </h4>
+        <p class="card-description">Are you sure you want to delete this subtask?</p>
+
+        <div class="alert alert-warning" role="alert">
+          <i class="mdi mdi-alert mr-2"></i>
+          <strong>Warning:</strong> This action cannot be undone.
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body">
+            <h6 class="card-title">Subtask of: <strong>{{ subtask.parent_task.title }}</strong></h6>
+            <h5 class="mt-2">{{ subtask.title }}</h5>
+            <p><strong>Status:</strong> 
+              {% if subtask.status == 'Completed' %}
+                <span class="badge badge-success">{{ subtask.status }}</span>
+              {% elif subtask.status == 'In Progress' %}
+                <span class="badge badge-warning">{{ subtask.status }}</span>
+              {% else %}
+                <span class="badge badge-danger">{{ subtask.status }}</span>
+              {% endif %}
+            </p>
+            <small class="text-muted">Created: {{ subtask.created_at|date:"M d, Y H:i" }}</small>
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <button type="submit" class="btn btn-danger mr-2">
+              <i class="mdi mdi-delete mr-1"></i>Yes, Delete Subtask
+            </button>
+            <a href="{% url 'task_detail' subtask.parent_task.pk %}" class="btn btn-light">
+              <i class="mdi mdi-arrow-left mr-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

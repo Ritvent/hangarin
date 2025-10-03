@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Note{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 grid-margin stretch-card mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title text-danger">
+          <i class="mdi mdi-alert-circle mr-2"></i>Delete Note
+        </h4>
+        <p class="card-description">Are you sure you want to delete this note?</p>
+
+        <div class="alert alert-warning" role="alert">
+          <i class="mdi mdi-alert mr-2"></i>
+          <strong>Warning:</strong> This action cannot be undone.
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body">
+            <h6 class="card-title">Note for: <strong>{{ note.task.title }}</strong></h6>
+            <p class="card-text">{{ note.content }}</p>
+            <small class="text-muted">Created: {{ note.created_at|date:"M d, Y H:i" }}</small>
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <button type="submit" class="btn btn-danger mr-2">
+              <i class="mdi mdi-delete mr-1"></i>Yes, Delete Note
+            </button>
+            <a href="{% url 'task_detail' note.task.pk %}" class="btn btn-light">
+              <i class="mdi mdi-arrow-left mr-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

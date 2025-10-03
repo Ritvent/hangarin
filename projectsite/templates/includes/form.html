@@ -1,0 +1,132 @@
+{% load widget_tweaks %}
+
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">{{ form_title|default:"Form Details" }}</h4>
+    <p class="card-description">{{ form_description|default:"Please fill in the required information" }}</p>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">
+        {% for error in form.non_field_errors %}
+          <p{% if forloop.last %} class="mb-0"{% endif %}>{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form class="forms-sample" method="post">
+      {% csrf_token %}
+      
+      {% for field in form %}
+        {% if field.field.widget.input_type == 'checkbox' %}
+          <!-- Checkbox Field -->
+          <div class="form-check form-check-flat form-check-primary mb-3">
+            <label class="form-check-label">
+              {% render_field field class="form-check-input" %}
+              {{ field.label }}
+            </label>
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        
+        {% elif field.field.widget.input_type == 'select' or 'Select' in field.field.widget|stringformat:"s" %}
+          <!-- Select Field -->
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% render_field field class="form-control" %}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        
+        {% elif field.field.widget.input_type == 'textarea' or 'Textarea' in field.field.widget|stringformat:"s" %}
+          <!-- Textarea Field -->
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% render_field field class="form-control" rows="4" %}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        
+        {% elif field.field.widget.input_type == 'file' %}
+          <!-- File Upload Field -->
+          <div class="form-group">
+            <label>{{ field.label }}</label>
+            {% render_field field class="file-upload-default" name="img[]" %}
+            <div class="input-group col-xs-12">
+              <input type="text" class="form-control file-upload-info" disabled placeholder="Upload {{ field.label }}">
+              <span class="input-group-append">
+                <button class="file-upload-browse btn btn-primary" type="button">Upload</button>
+              </span>
+            </div>
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        
+        {% elif field.field.widget.input_type == 'date' %}
+          <!-- Date Field -->
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% render_field field class="form-control" placeholder="dd/mm/yyyy" %}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        
+        {% elif field.field.widget.input_type == 'datetime-local' %}
+          <!-- DateTime Field -->
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% render_field field class="form-control" %}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        
+        {% else %}
+          <!-- Regular Input Fields (text, email, password, etc.) -->
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% render_field field class="form-control" placeholder=field.label %}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <!-- Form Actions -->
+      <div class="form-group mt-4">
+        <button type="submit" class="btn btn-primary mr-2">
+          <i class="mdi mdi-content-save mr-1"></i>{{ submit_text|default:"Save" }}
+        </button>
+        <a href="{{ cancel_url|default:'javascript:history.back()' }}" class="btn btn-light">
+          <i class="mdi mdi-arrow-left mr-1"></i>{{ cancel_text|default:"Cancel" }}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>

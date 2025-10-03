@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ form_title|default:"Category Form" }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6 grid-margin stretch-card mx-auto">
+    {% include 'includes/form.html' %}
+  </div>
+</div>
+{% endblock %}
