@@ -28,7 +28,7 @@
               {% elif subtask.status == 'In Progress' %}
                 <span class="badge badge-warning">{{ subtask.status }}</span>
               {% else %}
-                <span class="badge badge-secondary">{{ subtask.status }}</span>
+                <span class="badge badge-danger">{{ subtask.status }}</span>
               {% endif %}
             </p>
             <small class="text-muted">Created: {{ subtask.created_at|date:"M d, Y H:i" }}</small>

@@ -108,12 +108,14 @@
                           {% endif %}
                         </td>
                         <td>
-                          {% if task.priority.priority_name == 'High' or task.priority.priority_name == 'Critical' %}
-                            <span class="badge badge-danger">{{ task.priority.priority_name }}</span>
-                          {% elif task.priority.priority_name == 'Medium' %}
-                            <span class="badge badge-warning">{{ task.priority.priority_name }}</span>
+                          {% if task.priority.priority_name == 'high' or task.priority.priority_name == 'critical' %}
+                            <span class="badge badge-danger">{{ task.priority.priority_name|title }}</span>
+                          {% elif task.priority.priority_name == 'medium' %}
+                            <span class="badge badge-warning">{{ task.priority.priority_name|title }}</span>
+                          {% elif task.priority.priority_name == 'optional' %}
+                            <span class="badge badge-info">{{ task.priority.priority_name|title }}</span>
                           {% else %}
-                            <span class="badge badge-success">{{ task.priority.priority_name }}</span>
+                            <span class="badge badge-success">{{ task.priority.priority_name|title }}</span>
                           {% endif %}
                         </td>
                         <td>
@@ -122,7 +124,7 @@
                           {% elif task.status == 'In Progress' %}
                             <span class="badge badge-warning">{{ task.status }}</span>
                           {% else %}
-                            <span class="badge badge-secondary">{{ task.status }}</span>
+                            <span class="badge badge-danger">{{ task.status }}</span>
                           {% endif %}
                         </td>
                         <td>{{ task.deadline|date:"M d, Y H:i" }}</td>

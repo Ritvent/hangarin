@@ -74,18 +74,20 @@
                       {% elif task.status == 'In Progress' %}
                         <span class="badge badge-warning">{{ task.status }}</span>
                       {% else %}
-                        <span class="badge badge-secondary">{{ task.status }}</span>
+                        <span class="badge badge-danger">{{ task.status }}</span>
                       {% endif %}
                     </p>
                   </div>
                   <div class="col-sm-6">
                     <p><strong>Priority:</strong>
-                      {% if task.priority.priority_name == 'High' or task.priority.priority_name == 'Critical' %}
-                        <span class="badge badge-danger">{{ task.priority.priority_name }}</span>
-                      {% elif task.priority.priority_name == 'Medium' %}
-                        <span class="badge badge-warning">{{ task.priority.priority_name }}</span>
+                      {% if task.priority.priority_name == 'high' or task.priority.priority_name == 'critical' %}
+                        <span class="badge badge-danger">{{ task.priority.priority_name|title }}</span>
+                      {% elif task.priority.priority_name == 'medium' %}
+                        <span class="badge badge-warning">{{ task.priority.priority_name|title }}</span>
+                      {% elif task.priority.priority_name == 'optional' %}
+                        <span class="badge badge-info">{{ task.priority.priority_name|title }}</span>
                       {% else %}
-                        <span class="badge badge-success">{{ task.priority.priority_name }}</span>
+                        <span class="badge badge-success">{{ task.priority.priority_name|title }}</span>
                       {% endif %}
                     </p>
                   </div>
@@ -161,7 +163,7 @@
                       {% elif subtask.status == 'In Progress' %}
                         <small class="badge badge-warning">{{ subtask.status }}</small>
                       {% else %}
-                        <small class="badge badge-secondary">{{ subtask.status }}</small>
+                        <small class="badge badge-danger">{{ subtask.status }}</small>
                       {% endif %}
                     </div>
                     <div>

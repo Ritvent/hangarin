@@ -21,12 +21,14 @@
         <div class="card mb-3">
           <div class="card-body">
             <h5 class="card-title">
-              {% if priority.priority_name == 'High' or priority.priority_name == 'Critical' %}
-                <span class="badge badge-danger">{{ priority.priority_name }}</span>
-              {% elif priority.priority_name == 'Medium' %}
-                <span class="badge badge-warning">{{ priority.priority_name }}</span>
+              {% if priority.priority_name == 'high' or priority.priority_name == 'critical' %}
+                <span class="badge badge-danger">{{ priority.priority_name|title }}</span>
+              {% elif priority.priority_name == 'medium' %}
+                <span class="badge badge-warning">{{ priority.priority_name|title }}</span>
+              {% elif task.priority.priority_name == 'optional' %}
+                <span class="badge badge-info">{{ task.priority.priority_name|title }}</span>
               {% else %}
-                <span class="badge badge-success">{{ priority.priority_name }}</span>
+                <span class="badge badge-success">{{ priority.priority_name|title }}</span>
               {% endif %}
             </h5>
             <p><strong>Created:</strong> {{ priority.created_at|date:"M d, Y H:i" }}</p>
