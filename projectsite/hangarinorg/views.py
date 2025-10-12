@@ -27,6 +27,7 @@ def deploy(request):
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
     # If authorized, proceed with deployment
+    manage_dir = "/home/rosevent/hangarin/projectsite"  # directory where manage.py is located
     project_dir = "/home/rosevent/hangarin"  # where .git is
     wsgi_path = "/var/www/rosevent_pythonanywhere_com_wsgi.py"
     venv_path = "/home/rosevent/Hangarinenv/bin"
@@ -59,7 +60,7 @@ def deploy(request):
             logger.info("New migration files detected. Running migrate...")
             subprocess.run(
                 [f"{venv_path}/python", "manage.py", "migrate"],
-                cwd=project_dir,
+                cwd=manage_dir,
                 check=True
             )
         else:
