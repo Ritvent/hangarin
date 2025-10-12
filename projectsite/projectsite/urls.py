@@ -16,12 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from hangarinorg.views import deploy
 from hangarinorg.views import HomePageView, TaskListView
 from hangarinorg import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.HomePageView.as_view(), name='base'),
+    path("deploy/", views.deploy, name="deploy"),
     
     # ========== GENERAL TASK URLS ==========
     path('task/', views.TaskListView.as_view(), name='task_list'),
