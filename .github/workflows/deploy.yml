@@ -1,0 +1,15 @@
+name: Auto Deploy to PythonAnywhere
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger PythonAnywhere Deployment
+        run: |
+          curl -X POST "https://rosevent.pythonanywhere.com/deploy/" \
+          -H "Authorization: Bearer ${{ secrets.DEPLOY_TOKEN }}"
