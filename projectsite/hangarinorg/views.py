@@ -1,3 +1,12 @@
+import os
+import subprocess
+import logging
+
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
 from django.shortcuts import render
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -6,7 +15,70 @@ from hangarinorg.models import Task, Category, Priority, Note, SubTask
 from hangarinorg.forms import TaskForm, CategoryForm, PriorityForm, NoteForm, SubTaskForm
 from django.urls import reverse_lazy
 
-# Create your views here.
+
+logger = logging.getLogger(__name__)
+
+@csrf_exempt  # allows external POST requests (like from GitHub)
+@require_POST  # only allow POST requests, reject GET
+def deploy(request):
+    auth = request.headers.get("Authorization", "")
+    expected = f"Bearer {os.environ.get('DEPLOY_TOKEN', '')}"
+    if auth != expected:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    # If authorized, proceed with deployment
+    project_dir = "/home/rosevent/hangarin"  # where .git is
+    wsgi_path = "/var/www/rosevent_pythonanywhere_com_wsgi.py"
+    venv_path = "/home/rosevent/Hangarinenv/bin"
+
+    try:
+        # 1. Fetch latest version
+        subprocess.run(["git", "fetch"], cwd=project_dir, check=True)
+        diff = subprocess.run(
+            ["git", "diff", "--name-only", "origin/main"],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        ).stdout
+
+        # 2. Pull updates
+        subprocess.run(["git", "pull", "origin", "main"], cwd=project_dir, check=True)
+        logger.info("Pulled latest code from GitHub.")
+
+        # 3. Install dependencies
+        subprocess.run(
+            [f"{venv_path}/pip", "install", "-r", "requirements.txt"],
+            cwd=project_dir,
+            check=True
+        )
+        logger.info("Dependencies installed.")
+
+        # 4. Run migrations only if new ones detected
+        if "migrations/" in diff:
+            logger.info("New migration files detected. Running migrate...")
+            subprocess.run(
+                [f"{venv_path}/python", "manage.py", "migrate"],
+                cwd=project_dir,
+                check=True
+            )
+        else:
+            logger.info("No new migrations detected. Skipping migrate...")
+
+        # 5. Reload web app
+        subprocess.run(["touch", wsgi_path], check=True)
+        logger.info("Web app reloaded.")
+
+    except subprocess.CalledProcessError as e:
+        logger.exception("Command failed")
+        return JsonResponse({"error": "Command failed", "details": str(e)}, status=500)
+
+    except Exception as e:
+        logger.exception("Deployment failed")
+        return JsonResponse({"error": "Deployment failed", "details": str(e)}, status=500)
+
+    return JsonResponse({"status": "Deployed successfully"})
+
 
 class HomePageView(ListView):
     model = Task
