@@ -22,7 +22,7 @@ from hangarinorg import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.HomePageView.as_view(), name='base'),
+    path('', views.HomePageView.as_view(), name='dashboard'),
     path("deploy/", views.deploy, name="deploy"),
     
     # ========== GENERAL TASK URLS ==========
