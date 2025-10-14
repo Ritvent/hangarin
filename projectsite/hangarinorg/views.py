@@ -479,4 +479,13 @@ class CategoryTasksView(ListView):
             'in_progress_tasks': in_progress,
             'overdue_tasks': overdue,
         })
+        # Expose editable UI text labels so copy can be changed centrally
+        context['labels'] = {
+            'add_task': 'Add Task',
+            'create_first': 'Create Your First Task',
+            'task_col': 'Task',
+            'priority_col': 'Priority',
+            'status_col': 'Status',
+            'due_col': 'Due Date',
+        }
         return context

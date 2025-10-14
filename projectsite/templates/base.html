@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="{% static 'vendors/css/vendor.bundle.base.css' %}">
     <!-- endinject -->
     <!-- Plugin css for this page -->
+
+/>
     <link rel="stylesheet" href="{% static 'vendors/jvectormap/jquery-jvectormap.css' %}">
     <link rel="stylesheet" href="{% static 'vendors/flag-icon-css/css/flag-icon.min.css' %}">
     <link rel="stylesheet" href="{% static 'vendors/owl-carousel-2/owl.carousel.min.css' %}">
@@ -22,6 +24,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="{% static 'images/favicon.png' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
   </head>
   <body>
     <div class="container-scroller">
@@ -105,7 +108,7 @@
                 {% for cat in categories %}
                 <li class="nav-item d-flex align-items-center justify-content-between">
                   <a class="nav-link" href="{% url 'category_tasks' cat.pk %}">
-                    <i class="mdi {{ cat.icon|default:'mdi-folder-outline' }} mr-2"></i>{{ cat.category_name }}
+                    <i class="fa {{ cat.icon|default:'fa-pencil-square-o' }} mr-2"></i>{{ cat.category_name }}
                   </a>
                   <a href="{% url 'category_delete' cat.pk %}" class="btn btn-link p-0 text-danger" title="Delete category">
                     <i class="mdi mdi-delete"></i>
