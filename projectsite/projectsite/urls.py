@@ -29,41 +29,15 @@ urlpatterns = [
     path('task/', views.TaskListView.as_view(), name='task_list'),
     path('task/create/', views.TaskCreateView.as_view(), name='task_create'),
     
-    # ========== PERSONAL TASK URLS ==========
-    path('task/personal/', views.PersonalTasksView.as_view(), name='personal_tasks'),
-    path('task/personal/create/', views.PersonalTaskCreateView.as_view(), name='personal_task_create'),
-    path('task/personal/<int:pk>/', views.PersonalTaskDetailView.as_view(), name='personal_task_detail'),
-    path('task/personal/<int:pk>/edit/', views.PersonalTaskUpdateView.as_view(), name='personal_task_edit'),
-    path('task/personal/<int:pk>/delete/', views.PersonalTaskDeleteView.as_view(), name='personal_task_delete'),
     
-    # ========== PROJECT TASK URLS ==========
-    path('task/projects/', views.ProjectTasksView.as_view(), name='project_tasks'),
-    path('task/projects/create/', views.ProjectTaskCreateView.as_view(), name='project_task_create'),
-    path('task/projects/<int:pk>/', views.ProjectTaskDetailView.as_view(), name='project_task_detail'),
-    path('task/projects/<int:pk>/edit/', views.ProjectTaskUpdateView.as_view(), name='project_task_edit'),
-    path('task/projects/<int:pk>/delete/', views.ProjectTaskDeleteView.as_view(), name='project_task_delete'),
-    
-    # ========== SCHOOL TASK URLS ==========
-    path('task/school/', views.SchoolTasksView.as_view(), name='school_tasks'),
-    path('task/school/create/', views.SchoolTaskCreateView.as_view(), name='school_task_create'),
-    path('task/school/<int:pk>/', views.SchoolTaskDetailView.as_view(), name='school_task_detail'),
-    path('task/school/<int:pk>/edit/', views.SchoolTaskUpdateView.as_view(), name='school_task_edit'),
-    path('task/school/<int:pk>/delete/', views.SchoolTaskDeleteView.as_view(), name='school_task_delete'),
-    
-    # ========== WORK TASK URLS ==========
-    path('task/work/', views.WorkTasksView.as_view(), name='work_tasks'),
-    path('task/work/create/', views.WorkTaskCreateView.as_view(), name='work_task_create'),
-    path('task/work/<int:pk>/', views.WorkTaskDetailView.as_view(), name='work_task_detail'),
-    path('task/work/<int:pk>/edit/', views.WorkTaskUpdateView.as_view(), name='work_task_edit'),
-    path('task/work/<int:pk>/delete/', views.WorkTaskDeleteView.as_view(), name='work_task_delete'),
-    
-    # ========== FINANCE TASK URLS ==========
-    path('task/finance/', views.FinanceTasksView.as_view(), name='finance_tasks'),
-    path('task/finance/create/', views.FinanceTaskCreateView.as_view(), name='finance_task_create'),
-    path('task/finance/<int:pk>/', views.FinanceTaskDetailView.as_view(), name='finance_task_detail'),
-    path('task/finance/<int:pk>/edit/', views.FinanceTaskUpdateView.as_view(), name='finance_task_edit'),
-    path('task/finance/<int:pk>/delete/', views.FinanceTaskDeleteView.as_view(), name='finance_task_delete'),
-    
+    # ========== GENERAL TASK DETAIL/EDIT/DELETE (generic) ==========
+    path('task/<int:pk>/', views.TaskDetailView.as_view(), name='task_detail'),
+    path('task/<int:pk>/edit/', views.TaskUpdateView.as_view(), name='task_edit'),
+    path('task/<int:pk>/delete/', views.TaskDeleteView.as_view(), name='task_delete'),
+
+    # Dynamic category task view (by pk)
+    path('task/category/<int:pk>/', views.CategoryTasksView.as_view(), name='category_tasks'),
+
     # ========== CATEGORY CRUD URLs ==========
     path('categories/', views.CategoryListView.as_view(), name='category_list'),
     path('category/<int:pk>/', views.CategoryDetailView.as_view(), name='category_detail'),

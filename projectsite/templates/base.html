@@ -102,31 +102,17 @@
             </a>
             <div class="collapse" id="ui-basic">
               <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'personal_tasks' %}">
-                    <i class="mdi mdi-account mr-2"></i>Personal
+                {% for cat in categories %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'category_tasks' cat.pk %}">
+                    <i class="mdi {{ cat.icon|default:'mdi-folder-outline' }} mr-2"></i>{{ cat.category_name }}
                   </a>
                 </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'finance_tasks' %}">
-                    <i class="mdi mdi-cash mr-2"></i>Finance
-                  </a>
+                {% empty %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'category_list' %}">No categories yet</a>
                 </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'project_tasks' %}">
-                    <i class="mdi mdi-briefcase mr-2"></i>Projects
-                  </a>
-                </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'school_tasks' %}">
-                    <i class="mdi mdi-school mr-2"></i>School
-                  </a>
-                </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'work_tasks' %}">
-                    <i class="mdi mdi-office-building mr-2"></i>Work
-                  </a>
-                </li>
+                {% endfor %}
               </ul>
             </div>
           </li>
