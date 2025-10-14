@@ -194,7 +194,8 @@ class CategoryCreateView(CreateView):
     model = Category
     form_class = CategoryForm
     template_name = 'category_form.html'
-    success_url = reverse_lazy('category_list')
+    def get_success_url(self):
+        return self.request.path
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -223,7 +224,7 @@ class CategoryDeleteView(DeleteView):
     """View for deleting categories"""
     model = Category
     template_name = 'category_confirm_delete.html'
-    success_url = reverse_lazy('category_list')
+    success_url = reverse_lazy('dashboard')
     context_object_name = 'category'
 
 
