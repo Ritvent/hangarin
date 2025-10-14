@@ -13,8 +13,9 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from hangarinorg.models import Task, Category, Priority, Note, SubTask
 from hangarinorg.forms import TaskForm, CategoryForm, PriorityForm, NoteForm, SubTaskForm
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils import timezone
+from django.db.models import Case, When, IntegerField, Value
 
 
 logger = logging.getLogger(__name__)
@@ -135,7 +136,8 @@ class TaskCreateView(CreateView):
     model = Task
     form_class = TaskForm
     template_name = 'task_form.html'
-    success_url = reverse_lazy('dashboard')
+    def get_success_url(self):
+        return self.request.path
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -242,7 +244,8 @@ class PriorityCreateView(CreateView):
     model = Priority
     form_class = PriorityForm
     template_name = 'priority_form.html'
-    success_url = reverse_lazy('priority_list')
+    def get_success_url(self):
+        return self.request.path
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -282,13 +285,31 @@ class NoteCreateView(CreateView):
     model = Note
     form_class = NoteForm
     template_name = 'note_form.html'
-    success_url = reverse_lazy('dashboard')
+    # success URL will send user to the category page after creating a task
+    def get_success_url(self):
+        # redirect back to the category tasks view for the created task
+        try:
+            return reverse('category_tasks', args=[self.object.category.pk])
+        except Exception:
+            return reverse_lazy('dashboard')
+        return self.request.path
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form_title'] = 'Add New Note'
         context['form_description'] = 'Add a note to a task'
         context['submit_text'] = 'Add Note'
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # allow prefilling category via ?category=<pk>
+        category_pk = self.request.GET.get('category')
+        if category_pk:
+            try:
+                initial['category'] = int(category_pk)
+            except (ValueError, TypeError):
+                pass
+        return initial
         return context
 
 
@@ -322,7 +343,8 @@ class SubTaskCreateView(CreateView):
     model = SubTask
     form_class = SubTaskForm
     template_name = 'subtask_form.html'
-    success_url = reverse_lazy('dashboard')
+    def get_success_url(self):
+        return self.request.path
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -366,12 +388,70 @@ class CategoryTasksView(ListView):
 
     def get_queryset(self):
         category_pk = self.kwargs.get('pk')
-        return Task.objects.filter(category__pk=category_pk)
+        qs = Task.objects.filter(category__pk=category_pk)
+        # support filtering by priority via query param ?priority=<pk>
+        priority = self.request.GET.get('priority')
+        if priority:
+            try:
+                priority_pk = int(priority)
+                qs = qs.filter(priority__pk=priority_pk)
+            except (ValueError, TypeError):
+                pass
+        # support sorting via ?sort=<key>&dir=asc|desc
+        sort_key = self.request.GET.get('sort', '').strip()
+        sort_dir = self.request.GET.get('dir', 'asc')
+
+        # Special-case: semantic ordering for priority names instead of alphabetical
+        if sort_key == 'priority':
+            # Define preferred priority order (lower number = higher priority)
+            priority_order_case = Case(
+                When(priority__priority_name__iexact='critical', then=Value(1)),
+                When(priority__priority_name__iexact='high', then=Value(2)),
+                When(priority__priority_name__iexact='medium', then=Value(3)),
+                When(priority__priority_name__iexact='low', then=Value(4)),
+                When(priority__priority_name__iexact='optional', then=Value(5)),
+                default=Value(999),
+                output_field=IntegerField(),
+            )
+            # annotate and order by rank
+            try:
+                qs = qs.annotate(priority_rank=priority_order_case)
+                if sort_dir == 'desc':
+                    qs = qs.order_by('-priority_rank')
+                else:
+                    qs = qs.order_by('priority_rank')
+            except Exception:
+                pass
+        else:
+            # only allow a fixed set of sort keys to avoid unexpected ordering
+            allowed_sorts = {
+                'title': 'title',
+                'task': 'title',
+                'status': 'status',
+                'deadline': 'deadline',
+                'due': 'deadline',
+            }
+            if sort_key in allowed_sorts:
+                order_field = allowed_sorts[sort_key]
+                if sort_dir == 'desc':
+                    order_field = '-' + order_field
+                try:
+                    qs = qs.order_by(order_field)
+                except Exception:
+                    # if ordering fails for any reason, ignore and return unsorted qs
+                    pass
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category_pk = self.kwargs.get('pk')
         category = Category.objects.filter(pk=category_pk).first()
+        # expose available priorities and the selected priority for the template
+        context['priorities'] = Priority.objects.all()
+        context['selected_priority'] = self.request.GET.get('priority', '')
+        # expose sorting state for the template
+        context['current_sort'] = self.request.GET.get('sort', '')
+        context['current_direction'] = self.request.GET.get('dir', 'asc')
         # base category info
         context.update({
             'category_name': category.category_name if category else 'Category',

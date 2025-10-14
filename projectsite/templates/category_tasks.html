@@ -112,11 +112,23 @@
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-4">
           <h4 class="card-title mb-0"></h4> <!-- Search heeere -->
-          <div>
+          <div class="d-flex align-items-center">
+            <form method="get" class="mr-2">
+              <div class="form-group mb-0">
+                <select name="priority" onchange="this.form.submit()" class="form-control form-control-sm">
+                  <option value="">All priorities</option>
+                  {% for p in priorities %}
+                    <option value="{{ p.pk }}" {% if selected_priority == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.priority_name|title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </form>
+            <div>
             <button class="btn btn-outline-primary btn-sm mr-2">Filter</button>
-            <button class="btn btn-{{ category_color }} btn-sm">
+            <a href="{% url 'task_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }} btn-sm">
               <i class="mdi mdi-plus mr-1"></i>Add Task
-            </button>
+            </a>
+            </div>
           </div>
         </div>
 
@@ -125,11 +137,41 @@
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th>Task</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                  <th>Due Date</th>
-                  <th>Actions</th>
+                  {% comment %} Helper: build query preserving priority and toggling sort direction {% endcomment %}
+                  {% with req=request.GET %}
+                    {% with cur_sort=current_sort cur_dir=current_direction %}
+                      {% comment %} Compute toggle dir: if currently sorting this column asc -> desc, else asc {% endcomment %}
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=title&amp;dir={% if cur_sort == 'title' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">Task
+                          {% if cur_sort == 'title' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=priority&amp;dir={% if cur_sort == 'priority' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">Priority
+                          {% if cur_sort == 'priority' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=status&amp;dir={% if cur_sort == 'status' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">Status
+                          {% if cur_sort == 'status' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=deadline&amp;dir={% if cur_sort == 'deadline' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">Due Date
+                          {% if cur_sort == 'deadline' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>Actions</th>
+                    {% endwith %}
+                  {% endwith %}
                 </tr>
               </thead>
               <tbody>
@@ -196,9 +238,9 @@
             </div>
             <h5 class="text-muted">No {{ category_name|lower }} tasks yet</h5>
             <p class="text-muted mb-4">Start by creating your first {{ category_name|lower }} task</p>
-            <button class="btn btn-{{ category_color }}">
+            <a href="{% url 'task_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }}">
               <i class="mdi mdi-plus mr-1"></i>Create Your First Task
-            </button>
+            </a>
           </div>
         {% endif %}
       </div>
