@@ -135,7 +135,7 @@
                           <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline-warning btn-sm mr-1">
                             <i class="mdi mdi-pencil"></i>
                           </a>
-                          <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                          <a href="/task/{{ task.pk }}/delete/" class="btn btn-outline-danger btn-sm">
                             <i class="mdi mdi-delete"></i>
                           </a>
                         </td>

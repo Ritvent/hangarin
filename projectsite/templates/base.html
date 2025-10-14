@@ -93,38 +93,29 @@
             </a>
           </li>
           <li class="nav-item menu-items">
-            <a class="nav-link" data-toggle="collapse" href="#"aria-expanded="true" aria-controls="ui-basic">
+            <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
               <span class="menu-icon">
                 <i class="mdi mdi-laptop"></i>
               </span>
               <span class="menu-title">Tasks</span>
               <i class="menu-arrow"></i>
             </a>
-            <div class="collapse show" id="ui-basic">
+            <div class="collapse" id="ui-basic">
               <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'personal_tasks' %}">
-                    <i class="mdi mdi-account mr-2"></i>Personal
+                {% for cat in categories %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'category_tasks' cat.pk %}">
+                    <i class="mdi {{ cat.icon|default:'mdi-folder-outline' }} mr-2"></i>{{ cat.category_name }}
                   </a>
                 </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'finance_tasks' %}">
-                    <i class="mdi mdi-cash mr-2"></i>Finance
-                  </a>
+                {% empty %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'category_list' %}">No categories yet</a>
                 </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'project_tasks' %}">
-                    <i class="mdi mdi-briefcase mr-2"></i>Projects
-                  </a>
-                </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'school_tasks' %}">
-                    <i class="mdi mdi-school mr-2"></i>School
-                  </a>
-                </li>
-                <li class="nav-item"> 
-                  <a class="nav-link" href="{% url 'work_tasks' %}">
-                    <i class="mdi mdi-office-building mr-2"></i>Work
+                {% endfor %}
+                <li class="nav-item">
+                  <a class="nav-link text-primary" href="{% url 'category_create' %}">
+                    <i class="mdi mdi-plus-circle-outline mr-2"></i>Add Category
                   </a>
                 </li>
               </ul>
@@ -399,8 +390,7 @@
           <!-- partial:partials/_footer.html -->
           <footer class="footer">
             <div class="d-sm-flex justify-content-center justify-content-sm-between">
-              <span class="text-muted d-block text-center text-sm-left d-sm-inline-block">Copyright © bootstrapdash.com 2020</span>
-              <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center"> Free <a href="https://www.bootstrapdash.com/bootstrap-admin-template/" target="_blank">Bootstrap admin templates</a> from Bootstrapdash.com</span>
+
             </div>
           </footer>
           <!-- partial -->
@@ -429,6 +419,25 @@
     <!-- endinject -->
     <!-- Custom js for this page -->
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+    $(document).ready(function() {
+    // Prevent submenu click from closing the parent collapse
+    $('.sub-menu a').on('click', function(e) {
+      e.stopPropagation();
+    });
+
+    // Optional: keep dropdown open for active submenu page
+    $('.nav-item .nav-link').each(function() {
+      if (this.href === window.location.href) {
+        $(this).addClass('active');
+        $(this).closest('.collapse').addClass('show');
+        $(this).closest('.nav-item')
+               .find('[data-toggle="collapse"]')
+               .attr('aria-expanded', 'true');
+      }
+    });
+  });
+  </script>
     <!-- End custom js for this page -->
   </body>
 </html>

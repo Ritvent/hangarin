@@ -13,49 +13,12 @@
             <i class="mdi mdi-clipboard-text mr-2"></i>{{ task.title }}
           </h4>
           <div>
-            {% if task.category.category_name == 'Personal' %}
-              <a href="{% url 'personal_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
-                <i class="mdi mdi-pencil"></i> Edit
-              </a>
-              <a href="{% url 'personal_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
-                <i class="mdi mdi-delete"></i> Delete
-              </a>
-            {% elif task.category.category_name == 'Projects' %}
-              <a href="{% url 'project_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
-                <i class="mdi mdi-pencil"></i> Edit
-              </a>
-              <a href="{% url 'project_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
-                <i class="mdi mdi-delete"></i> Delete
-              </a>
-            {% elif task.category.category_name == 'School' %}
-              <a href="{% url 'school_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
-                <i class="mdi mdi-pencil"></i> Edit
-              </a>
-              <a href="{% url 'school_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
-                <i class="mdi mdi-delete"></i> Delete
-              </a>
-            {% elif task.category.category_name == 'Work' %}
-              <a href="{% url 'work_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
-                <i class="mdi mdi-pencil"></i> Edit
-              </a>
-              <a href="{% url 'work_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
-                <i class="mdi mdi-delete"></i> Delete
-              </a>
-            {% elif task.category.category_name == 'Finance' %}
-              <a href="{% url 'finance_task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
-                <i class="mdi mdi-pencil"></i> Edit
-              </a>
-              <a href="{% url 'finance_task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
-                <i class="mdi mdi-delete"></i> Delete
-              </a>
-            {% else %}
-              <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
-                <i class="mdi mdi-pencil"></i> Edit
-              </a>
-              <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
-                <i class="mdi mdi-delete"></i> Delete
-              </a>
-            {% endif %}
+            <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline-info btn-sm mr-2">
+              <i class="mdi mdi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+              <i class="mdi mdi-delete"></i> Delete
+            </a>
           </div>
         </div>
 
@@ -184,9 +147,15 @@
         </div>
 
         <div class="mt-4">
-          <a href="{% url 'base' %}" class="btn btn-light">
-            <i class="mdi mdi-arrow-left"></i> Back to Tasks
-          </a>
+          {% if task.category %}
+            <a href="{% url 'category_tasks' task.category.pk %}" class="btn btn-light">
+              <i class="mdi mdi-arrow-left"></i> Back to {{ task.category.category_name }}
+            </a>
+          {% else %}
+            <a href="{% url 'dashboard' %}" class="btn btn-light">
+              <i class="mdi mdi-arrow-left"></i> Back to Tasks
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>

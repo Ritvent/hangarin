@@ -14,6 +14,7 @@ from django.views.generic.detail import DetailView
 from hangarinorg.models import Task, Category, Priority, Note, SubTask
 from hangarinorg.forms import TaskForm, CategoryForm, PriorityForm, NoteForm, SubTaskForm
 from django.urls import reverse_lazy
+from django.utils import timezone
 
 
 logger = logging.getLogger(__name__)
@@ -100,12 +101,12 @@ class HomePageView(ListView):
         context['pending_tasks'] = all_tasks.filter(status='Pending').count()
         context['in_progress_tasks'] = all_tasks.filter(status='In Progress').count()
         
-        # Add tasks by category
-        context['personal_tasks'] = all_tasks.filter(category__category_name='Personal')
-        context['project_tasks'] = all_tasks.filter(category__category_name='Projects')
-        context['school_tasks'] = all_tasks.filter(category__category_name='School')
-        context['work_tasks'] = all_tasks.filter(category__category_name='Work')
-        context['finance_tasks'] = all_tasks.filter(category__category_name='Finance')
+        # Add tasks grouped by category dynamically (no hardcoded category names)
+        category_groups = []
+        for cat in Category.objects.all():
+            qs = all_tasks.filter(category=cat)
+            category_groups.append({'category': cat, 'tasks': qs})
+        context['category_task_groups'] = category_groups
         
         return context
 
@@ -117,20 +118,7 @@ class TaskListView(ListView):
 
 
 # Category-specific views
-class PersonalTasksView(ListView):
-    model = Task
-    template_name = 'category_tasks.html'
-    context_object_name = 'tasks'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Personal')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category_name'] = 'Personal'
-        context['category_icon'] = 'mdi-account'
-        context['category_color'] = 'primary'
-        return context
+
 
 
 # ========== TASK CRUD VIEWS ==========
@@ -366,361 +354,48 @@ class SubTaskDeleteView(DeleteView):
     context_object_name = 'subtask'
 
 
-# ========== CATEGORY-SPECIFIC CRUD VIEWS ==========
-
-# Personal Task Views
-class PersonalTaskCreateView(CreateView):
-    """Create personal tasks with category pre-set"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('personal_tasks')
-    
-    def form_valid(self, form):
-        form.instance.category = Category.objects.get(category_name='Personal')
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = 'Create Personal Task'
-        context['form_description'] = 'Add a new personal task'
-        context['submit_text'] = 'Create Task'
-        return context
+ 
 
 
-class PersonalTaskDetailView(DetailView):
-    """View personal task details with category validation"""
-    model = Task
-    template_name = 'task_detail.html'
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Personal')
-
-
-class PersonalTaskUpdateView(UpdateView):
-    """Edit personal tasks with category validation"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('personal_tasks')
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Personal')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = f'Edit Personal Task: {self.object.title}'
-        context['form_description'] = 'Update your personal task'
-        context['submit_text'] = 'Update Task'
-        return context
-
-
-class PersonalTaskDeleteView(DeleteView):
-    """Delete personal tasks with category validation"""
-    model = Task
-    template_name = 'task_confirm_delete.html'
-    success_url = reverse_lazy('personal_tasks')
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Personal')
-
-
-# Project Task Views
-class ProjectTaskCreateView(CreateView):
-    """Create project tasks with category pre-set"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('project_tasks')
-    
-    def form_valid(self, form):
-        form.instance.category = Category.objects.get(category_name='Projects')
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = 'Create Project Task'
-        context['form_description'] = 'Add a new project task'
-        context['submit_text'] = 'Create Task'
-        return context
-
-
-class ProjectTaskDetailView(DetailView):
-    """View project task details with category validation"""
-    model = Task
-    template_name = 'task_detail.html'
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Projects')
-
-
-class ProjectTaskUpdateView(UpdateView):
-    """Edit project tasks with category validation"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('project_tasks')
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Projects')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = f'Edit Project Task: {self.object.title}'
-        context['form_description'] = 'Update your project task'
-        context['submit_text'] = 'Update Task'
-        return context
-
-
-class ProjectTaskDeleteView(DeleteView):
-    """Delete project tasks with category validation"""
-    model = Task
-    template_name = 'task_confirm_delete.html'
-    success_url = reverse_lazy('project_tasks')
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Projects')
-
-
-# School Task Views
-class SchoolTaskCreateView(CreateView):
-    """Create school tasks with category pre-set"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('school_tasks')
-    
-    def form_valid(self, form):
-        form.instance.category = Category.objects.get(category_name='School')
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = 'Create School Task'
-        context['form_description'] = 'Add a new school task'
-        context['submit_text'] = 'Create Task'
-        return context
-
-
-class SchoolTaskDetailView(DetailView):
-    """View school task details with category validation"""
-    model = Task
-    template_name = 'task_detail.html'
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='School')
-
-
-class SchoolTaskUpdateView(UpdateView):
-    """Edit school tasks with category validation"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('school_tasks')
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='School')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = f'Edit School Task: {self.object.title}'
-        context['form_description'] = 'Update your school task'
-        context['submit_text'] = 'Update Task'
-        return context
-
-
-class SchoolTaskDeleteView(DeleteView):
-    """Delete school tasks with category validation"""
-    model = Task
-    template_name = 'task_confirm_delete.html'
-    success_url = reverse_lazy('school_tasks')
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='School')
-
-
-# Work Task Views
-class WorkTaskCreateView(CreateView):
-    """Create work tasks with category pre-set"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('work_tasks')
-    
-    def form_valid(self, form):
-        form.instance.category = Category.objects.get(category_name='Work')
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = 'Create Work Task'
-        context['form_description'] = 'Add a new work task'
-        context['submit_text'] = 'Create Task'
-        return context
-
-
-class WorkTaskDetailView(DetailView):
-    """View work task details with category validation"""
-    model = Task
-    template_name = 'task_detail.html'
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Work')
-
-
-class WorkTaskUpdateView(UpdateView):
-    """Edit work tasks with category validation"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('work_tasks')
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Work')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = f'Edit Work Task: {self.object.title}'
-        context['form_description'] = 'Update your work task'
-        context['submit_text'] = 'Update Task'
-        return context
-
-
-class WorkTaskDeleteView(DeleteView):
-    """Delete work tasks with category validation"""
-    model = Task
-    template_name = 'task_confirm_delete.html'
-    success_url = reverse_lazy('work_tasks')
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Work')
-
-
-# Finance Task Views
-class FinanceTaskCreateView(CreateView):
-    """Create finance tasks with category pre-set"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('finance_tasks')
-    
-    def form_valid(self, form):
-        form.instance.category = Category.objects.get(category_name='Finance')
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = 'Create Finance Task'
-        context['form_description'] = 'Add a new finance task'
-        context['submit_text'] = 'Create Task'
-        return context
-
-
-class FinanceTaskDetailView(DetailView):
-    """View finance task details with category validation"""
-    model = Task
-    template_name = 'task_detail.html'
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Finance')
-
-
-class FinanceTaskUpdateView(UpdateView):
-    """Edit finance tasks with category validation"""
-    model = Task
-    form_class = TaskForm
-    template_name = 'task_form.html'
-    success_url = reverse_lazy('finance_tasks')
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Finance')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_title'] = f'Edit Finance Task: {self.object.title}'
-        context['form_description'] = 'Update your finance task'
-        context['submit_text'] = 'Update Task'
-        return context
-
-
-class FinanceTaskDeleteView(DeleteView):
-    """Delete finance tasks with category validation"""
-    model = Task
-    template_name = 'task_confirm_delete.html'
-    success_url = reverse_lazy('finance_tasks')
-    context_object_name = 'task'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Finance')
-
-
-# ========== EXISTING CATEGORY-SPECIFIC VIEWS ==========
-
-class ProjectTasksView(ListView):
+class CategoryTasksView(ListView):
+    """Displays all tasks under a given category (dynamic by pk)."""
     model = Task
     template_name = 'category_tasks.html'
     context_object_name = 'tasks'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Projects')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category_name'] = 'Projects'
-        context['category_icon'] = 'mdi-briefcase'
-        context['category_color'] = 'success'
-        return context
 
-class SchoolTasksView(ListView):
-    model = Task
-    template_name = 'category_tasks.html'
-    context_object_name = 'tasks'
-    
     def get_queryset(self):
-        return Task.objects.filter(category__category_name='School')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category_name'] = 'School'
-        context['category_icon'] = 'mdi-school'
-        context['category_color'] = 'info'
-        return context
+        category_pk = self.kwargs.get('pk')
+        return Task.objects.filter(category__pk=category_pk)
 
-class WorkTasksView(ListView):
-    model = Task
-    template_name = 'category_tasks.html'
-    context_object_name = 'tasks'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Work')
-    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['category_name'] = 'Work'
-        context['category_icon'] = 'mdi-office-building'
-        context['category_color'] = 'warning'
-        return context
+        category_pk = self.kwargs.get('pk')
+        category = Category.objects.filter(pk=category_pk).first()
+        # base category info
+        context.update({
+            'category_name': category.category_name if category else 'Category',
+            'category_icon': getattr(category, 'icon', 'mdi-folder-outline') if category else 'mdi-folder-outline',
+            'category_color': getattr(category, 'color', 'secondary') if category else 'secondary',
+            'category_pk': category_pk,
+        })
 
-class FinanceTasksView(ListView):
-    model = Task
-    template_name = 'category_tasks.html'
-    context_object_name = 'tasks'
-    
-    def get_queryset(self):
-        return Task.objects.filter(category__category_name='Finance')
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category_name'] = 'Finance'
-        context['category_icon'] = 'mdi-cash'
-        context['category_color'] = 'danger'
+        # compute category-specific task statistics for dashboard cards
+        qs = Task.objects.filter(category=category) if category else Task.objects.none()
+        today = timezone.now().date()
+        total = qs.count()
+        completed = qs.filter(status__iexact='Completed').count()
+        pending = qs.filter(status__iexact='Pending').count()
+        in_progress = qs.filter(status__iexact='In Progress').count()
+
+        # Use 'deadline' field (exists on Task). Support both DateField and DateTimeField.
+        # Filter tasks with a non-null deadline less than today and not completed.
+        overdue = qs.exclude(deadline__isnull=True).filter(deadline__lt=today).exclude(status__iexact='Completed').count()
+
+        context.update({
+            'total_tasks': total,
+            'completed_tasks': completed,
+            'pending_tasks': pending,
+            'in_progress_tasks': in_progress,
+            'overdue_tasks': overdue,
+        })
         return context
