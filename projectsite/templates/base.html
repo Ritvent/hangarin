@@ -429,6 +429,25 @@
     <!-- endinject -->
     <!-- Custom js for this page -->
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+    $(document).ready(function() {
+    // Prevent submenu click from closing the parent collapse
+    $('.sub-menu a').on('click', function(e) {
+      e.stopPropagation();
+    });
+
+    // Optional: keep dropdown open for active submenu page
+    $('.nav-item .nav-link').each(function() {
+      if (this.href === window.location.href) {
+        $(this).addClass('active');
+        $(this).closest('.collapse').addClass('show');
+        $(this).closest('.nav-item')
+               .find('[data-toggle="collapse"]')
+               .attr('aria-expanded', 'true');
+      }
+    });
+  });
+  </script>
     <!-- End custom js for this page -->
   </body>
 </html>
