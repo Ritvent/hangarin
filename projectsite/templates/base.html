@@ -113,6 +113,11 @@
                   <a class="nav-link" href="{% url 'category_list' %}">No categories yet</a>
                 </li>
                 {% endfor %}
+                <li class="nav-item">
+                  <a class="nav-link text-primary" href="{% url 'category_create' %}">
+                    <i class="mdi mdi-plus-circle-outline mr-2"></i>Add Category
+                  </a>
+                </li>
               </ul>
             </div>
           </li>
@@ -385,6 +390,7 @@
           <!-- partial:partials/_footer.html -->
           <footer class="footer">
             <div class="d-sm-flex justify-content-center justify-content-sm-between">
+
             </div>
           </footer>
           <!-- partial -->
