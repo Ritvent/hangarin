@@ -107,13 +107,10 @@
                   <a class="nav-link" href="{% url 'category_tasks' cat.pk %}">
                     <i class="mdi {{ cat.icon|default:'mdi-folder-outline' }} mr-2"></i>{{ cat.category_name }}
                   </a>
-                  <form method="post" action="{% url 'category_delete' cat.pk %}" onsubmit="return confirm('Delete category &quot;{{ cat.category_name }}&quot;? This will also remove its tasks. Continue?');" class="ml-2">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-link p-0 text-danger" title="Delete category">
-                      <i class="mdi mdi-delete"></i>
-                    </button>
-                  </form>
-                </li>
+                  <a href="{% url 'category_delete' cat.pk %}" class="btn btn-link p-0 text-danger" title="Delete category">
+                    <i class="mdi mdi-delete"></i>
+                  </a>
+                </li> 
                 {% empty %}
                 <li class="nav-item">
                   <a class="nav-link" href="{% url 'category_list' %}">No categories yet</a>
