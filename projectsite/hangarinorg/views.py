@@ -83,7 +83,7 @@ def deploy(request):
 
 class HomePageView(ListView):
     model = Task
-    template_name = 'base.html'
+    template_name = 'dashboard.html'
     context_object_name = 'tasks'
     
     def get_context_data(self, **kwargs):
@@ -111,7 +111,7 @@ class HomePageView(ListView):
 
 class TaskListView(ListView):
     model = Task
-    template_name = 'base.html'
+    template_name = 'dashboard.html'
     context_object_name = 'tasks'
 
 
@@ -147,7 +147,7 @@ class TaskCreateView(CreateView):
     model = Task
     form_class = TaskForm
     template_name = 'task_form.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -162,7 +162,7 @@ class TaskUpdateView(UpdateView):
     model = Task
     form_class = TaskForm
     template_name = 'task_form.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -176,7 +176,7 @@ class TaskDeleteView(DeleteView):
     """View for deleting tasks"""
     model = Task
     template_name = 'task_confirm_delete.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     context_object_name = 'task'
 
 
@@ -293,7 +293,7 @@ class NoteCreateView(CreateView):
     model = Note
     form_class = NoteForm
     template_name = 'note_form.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -308,7 +308,7 @@ class NoteUpdateView(UpdateView):
     model = Note
     form_class = NoteForm
     template_name = 'note_form.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -322,7 +322,7 @@ class NoteDeleteView(DeleteView):
     """View for deleting notes"""
     model = Note
     template_name = 'note_confirm_delete.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     context_object_name = 'note'
 
 
@@ -333,7 +333,7 @@ class SubTaskCreateView(CreateView):
     model = SubTask
     form_class = SubTaskForm
     template_name = 'subtask_form.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -348,7 +348,7 @@ class SubTaskUpdateView(UpdateView):
     model = SubTask
     form_class = SubTaskForm
     template_name = 'subtask_form.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -362,7 +362,7 @@ class SubTaskDeleteView(DeleteView):
     """View for deleting subtasks"""
     model = SubTask
     template_name = 'subtask_confirm_delete.html'
-    success_url = reverse_lazy('base')
+    success_url = reverse_lazy('dashboard')
     context_object_name = 'subtask'
 
 
