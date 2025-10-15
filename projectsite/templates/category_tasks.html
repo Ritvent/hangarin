@@ -115,19 +115,37 @@
           <!-- Filters - wrap on mobile -->
           <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-between">
             <div class="mb-2 mb-sm-0">
-              <form method="get" class="d-inline-block">
-                <div class="form-group mb-0">
-                  <select name="priority" onchange="this.form.submit()" class="form-control form-control-sm">
-                    <option value="">All priorities</option>
-                    {% for p in priorities %}
-                      <option value="{{ p.pk }}" {% if selected_priority == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.priority_name|title }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </form>
+                <form method="get" class="mr-2 d-flex align-items-center" id="filtersForm">
+                  <div class="form-group mb-0 mr-2">
+                    <select id="priorityFilter" name="priority" onchange="this.form.submit()" class="form-control form-control-sm">
+                      <option value="">All priorities</option>
+                      {% for p in priorities %}
+                        <option value="{{ p.pk }}" {% if selected_priority == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.priority_name|title }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <div class="form-group mb-0 mr-2">
+                    <select id="statusFilter" name="status" onchange="this.form.submit()" class="form-control form-control-sm">
+                      <option value="">All statuses</option>
+                      <option value="Completed" {% if request.GET.status == 'Completed' %}selected{% endif %}>Completed</option>
+                      <option value="In Progress" {% if request.GET.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                      <option value="Pending" {% if request.GET.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                  </div>
+
+                  <!-- date filters removed per request -->
+                </form>
             </div>
             <div class="d-flex">
-              <button class="btn btn-outline-primary btn-sm mr-2">Filter</button>
+              <button id="orderByDateBtn" type="button" class="btn btn-outline-primary btn-sm mr-2">
+                Order by date
+                <span id="orderByDateIcon" style="margin-left:6px;">
+                  {% if current_sort == 'deadline' %}
+                    {% if current_direction == 'asc' %}▲{% else %}▼{% endif %}
+                  {% endif %}
+                </span>
+              </button>
               <a href="{% url 'task_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }} btn-sm">
                 <i class="mdi mdi-plus mr-1"></i>
                 <span class="d-none d-sm-inline">{{ labels.add_task|default:'Add Task' }}</span>
@@ -180,7 +198,7 @@
               </thead>
               <tbody>
                 {% for task in tasks %}
-                <tr>
+                  <tr data-priority="{{ task.priority.pk }}" data-status="{{ task.status }}" data-deadline="{% if task.deadline %}{{ task.deadline|date:'Y-m-d' }}{% endif %}">
                   <td>
                     <div class="d-flex align-items-center">
                       <div class="form-check form-check-muted m-0 mr-3">
@@ -248,7 +266,7 @@
           {% if tasks %}
             <div class="row" id="taskContainer">
               {% for task in tasks %}
-                <div class="col-12 mb-3 task-card">
+                <div class="col-12 mb-3 task-card" data-priority="{{ task.priority.pk }}" data-status="{{ task.status }}" data-deadline="{% if task.deadline %}{{ task.deadline|date:'Y-m-d' }}{% endif %}">
                   <div class="card bg-dark text-light border border-mobile-{{ category_color }}">
                     <div class="card-body">
                       <div class="d-flex justify-content-between align-items-start mb-2">
@@ -317,6 +335,13 @@
       border-width: 2px !important;
     }
   }
+  /* Filters responsive tweaks */
+  @media (max-width: 575px) {
+    #filtersForm { flex-direction: column !important; gap: 6px; }
+    #filtersForm .form-group { width: 100% !important; }
+    #filtersForm input[type="date"], #filtersForm select { width: 100% !important; }
+    .d-flex > .d-flex { width: 100%; justify-content: flex-end; margin-top: 8px; }
+  }
   
   @media (max-width: 575px) {
     .btn-sm {
@@ -349,33 +374,78 @@
       noResultsRow.style.display = 'none';
       tableBody.parentNode && tableBody.appendChild(noResultsRow);
     }
+    function parseDateYmd(s){
+      if (!s) return null;
+      const parts = s.split('-');
+      if (parts.length !== 3) return null;
+      return new Date(parts[0], parts[1]-1, parts[2]);
+    }
+
     function filterOnce(){
       const q = norm(searchInput.value);
+      const selectedPriority = document.getElementById('priorityFilter') ? document.getElementById('priorityFilter').value : '';
+      const selectedStatus = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+      const dateFromVal = document.getElementById('dateFrom') ? document.getElementById('dateFrom').value : '';
+      const dateToVal = document.getElementById('dateTo') ? document.getElementById('dateTo').value : '';
+      const dateFrom = parseDateYmd(dateFromVal);
+      const dateTo = parseDateYmd(dateToVal);
+
       let anyVisible = false;
+
+      function matchesFilters(elTitle, elDesc, elPriority, elStatus, elDeadline){
+        // text match
+        const text = (norm(elTitle) + ' ' + norm(elDesc)).trim();
+        if (q !== '' && text.indexOf(q) === -1) return false;
+        // priority match
+        if (selectedPriority && selectedPriority !== '' && elPriority !== undefined && elPriority !== null) {
+          if (String(elPriority) !== String(selectedPriority)) return false;
+        }
+        // status match
+        if (selectedStatus && selectedStatus !== '' && elStatus) {
+          if (String(elStatus) !== String(selectedStatus)) return false;
+        }
+        // date range match
+        if ((dateFrom || dateTo) && elDeadline) {
+          const d = parseDateYmd(elDeadline);
+          if (!d) return false;
+          if (dateFrom && d < dateFrom) return false;
+          if (dateTo && d > dateTo) return false;
+        }
+        return true;
+      }
+
       if (tableBody) {
         Array.from(tableBody.querySelectorAll('tr')).forEach(function(row){
           if (row.id === 'noResultsRow') return;
-          const title = norm(row.querySelector('.card-title') ? row.querySelector('.card-title').textContent : '');
-          const desc = norm(row.querySelector('p') ? row.querySelector('p').textContent : '');
-          const match = q === '' || (title + ' ' + desc).indexOf(q) !== -1;
+          const title = row.querySelector('.card-title') ? row.querySelector('.card-title').textContent : '';
+          const desc = row.querySelector('p') ? row.querySelector('p').textContent : '';
+          const priority = row.getAttribute('data-priority') || '';
+          const status = row.getAttribute('data-status') || '';
+          const deadline = row.getAttribute('data-deadline') || '';
+          const match = matchesFilters(title, desc, priority, status, deadline);
           row.style.display = match ? '' : 'none';
           if (match) anyVisible = true;
         });
         if (noResultsRow) noResultsRow.style.display = anyVisible ? 'none' : '';
       }
+
       if (mobileCards && mobileCards.length) {
         let anyCardVisible = false;
         mobileCards.forEach(function(card){
           const titleEl = card.querySelector('h6');
           const descEl = card.querySelector('p');
-          const title = norm(titleEl ? titleEl.textContent : '');
-          const desc = norm(descEl ? descEl.textContent : '');
-          const match = q === '' || (title + ' ' + desc).indexOf(q) !== -1;
+          const title = titleEl ? titleEl.textContent : '';
+          const desc = descEl ? descEl.textContent : '';
+          const priority = card.getAttribute('data-priority') || '';
+          const status = card.getAttribute('data-status') || '';
+          const deadline = card.getAttribute('data-deadline') || '';
+          const match = matchesFilters(title, desc, priority, status, deadline);
           card.style.display = match ? '' : 'none';
           if (match) anyCardVisible = true;
         });
         anyVisible = anyVisible || anyCardVisible;
       }
+
       return anyVisible;
     }
     let timer = null;
@@ -383,7 +453,74 @@
       clearTimeout(timer);
       timer = setTimeout(filterOnce, 120);
     });
-    document.addEventListener('DOMContentLoaded', filterOnce);
+    document.addEventListener('DOMContentLoaded', function(){
+      filterOnce();
+      // wire Order by date toggle button
+      const orderBtn = document.getElementById('orderByDateBtn');
+      if (orderBtn) {
+        orderBtn.addEventListener('click', function(evt){
+          try{
+            const params = new URLSearchParams(window.location.search);
+            const curSort = params.get('sort');
+            const curDir = params.get('dir') || 'asc';
+            let newDir = 'asc';
+            if (curSort === 'deadline') {
+              newDir = curDir === 'asc' ? 'desc' : 'asc';
+            } else {
+              newDir = 'asc';
+            }
+
+            // Update arrow icon immediately
+            const icon = document.getElementById('orderByDateIcon');
+            if (icon) icon.textContent = newDir === 'asc' ? '▲' : '▼';
+
+            // Client-side sort of visible rows/cards by data-deadline
+            function dateValFrom(str){
+              if (!str) return null;
+              const d = parseDateYmd(str);
+              return d ? d.getTime() : null;
+            }
+
+            // Sort table rows (preserve header and noResultsRow)
+            if (tableBody) {
+              const rows = Array.from(tableBody.querySelectorAll('tr')).filter(r => r.id !== 'noResultsRow');
+              // Only consider visible rows
+              const visibleRows = rows.filter(r => r.style.display !== 'none');
+              visibleRows.sort(function(a,b){
+                const da = dateValFrom(a.getAttribute('data-deadline')) || 0;
+                const db = dateValFrom(b.getAttribute('data-deadline')) || 0;
+                return newDir === 'asc' ? da - db : db - da;
+              });
+              // Re-append in sorted order
+              visibleRows.forEach(r => tableBody.appendChild(r));
+            }
+
+            // Sort mobile cards
+            if (mobileCards && mobileCards.length) {
+              const container = document.getElementById('taskContainer');
+              if (container) {
+                const cards = Array.from(container.querySelectorAll('.task-card')).filter(c => c.style.display !== 'none');
+                cards.sort(function(a,b){
+                  const da = dateValFrom(a.getAttribute('data-deadline')) || 0;
+                  const db = dateValFrom(b.getAttribute('data-deadline')) || 0;
+                  return newDir === 'asc' ? da - db : db - da;
+                });
+                cards.forEach(c => container.appendChild(c));
+              }
+            }
+
+            // Update the URL via pushState so the sort is reflected without reloading
+            params.set('sort', 'deadline');
+            params.set('dir', newDir);
+            const newUrl = window.location.pathname + '?' + params.toString();
+            history.pushState({}, '', newUrl);
+
+            // Prevent default navigation (we already applied client-side sort)
+            evt.preventDefault();
+          }catch(e){ console.error(e); }
+        });
+      }
+    });
   })();
 </script>
 {% endblock extra_scripts %}
