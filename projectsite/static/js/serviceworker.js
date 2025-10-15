@@ -10,12 +10,21 @@ self.addEventListener('install', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
-    e.respondWith(
-        caches.match(e.request).then(function(response) {
-            // return cache hit or do normal fetch
-            return response || fetch(e.request);
-        }).catch(function() {
-            // optional: fallback logic if offline and not cached
-        })
-    );
+    e.respondWith((async function(){
+        // Try cache first
+        const cached = await caches.match(e.request);
+        if (cached) return cached;
+
+        // Not in cache -> try network, but handle network failures gracefully
+        try {
+            const netResp = await fetch(e.request);
+            return netResp;
+        } catch (err) {
+            // Network failed (offline or other error). Try a sensible fallback.
+            // Prefer a cached navigation/root or a small offline Response.
+            const fallback = await caches.match('/static/css/style.css');
+            if (fallback) return fallback;
+            return new Response('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
+        }
+    })());
 });
