@@ -93,13 +93,26 @@
   </div>
 </div>
 
+
 <!-- Tasks List -->
 <div class="row">
   <div class="col-12 grid-margin stretch-card">
     <div class="card">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-4">
-          <h4 class="card-title mb-0"></h4> <!-- Search heeere -->
+          <h4 class="card-title mb-0"></h4>
+          <!-- Search bar: filters both desktop table rows and mobile cards -->
+          <div class="ml-3 flex-grow-1" style="max-width: 300px;">
+            <div class="input-group input-group-sm">
+              <input 
+                id="taskSearch" 
+                type="search" 
+                class="form-control form-control-sm text-light bg-dark border-secondary" 
+                placeholder="Search tasks by title or description"
+                aria-label="Search tasks"
+                >
+              </div>
+            </div>
           <div class="d-flex align-items-center">
             <form method="get" class="mr-2">
               <div class="form-group mb-0">
@@ -239,3 +252,90 @@
 </div>
 
 {% endblock content %}
+
+{% block extra_scripts %}
+<script>
+  (function(){
+    const searchInput = document.getElementById('taskSearch');
+    const clearBtn = document.getElementById('taskSearchClear');
+    if (!searchInput) return;
+
+    // Helper: normalize text for comparison
+    function norm(s){ return (s||'').toString().toLowerCase().trim(); }
+
+    // Elements to filter
+    const tableBody = document.querySelector('table.table tbody');
+    const mobileCards = document.querySelectorAll('.task-card'); // if mobile cards are present
+
+    // Create a no-results placeholder for tables and mobile views
+    let noResultsRow = document.getElementById('noResultsRow');
+    if (!noResultsRow && tableBody) {
+      noResultsRow = document.createElement('tr');
+      noResultsRow.id = 'noResultsRow';
+      noResultsRow.innerHTML = '<td colspan="6" class="text-center text-muted py-4">No tasks match your search.</td>';
+      noResultsRow.style.display = 'none';
+      tableBody.parentNode && tableBody.appendChild(noResultsRow);
+    }
+
+    function filterOnce(){
+      const q = norm(searchInput.value);
+      let anyVisible = false;
+
+      if (tableBody) {
+        Array.from(tableBody.querySelectorAll('tr')).forEach(function(row){
+          if (row.id === 'noResultsRow') return; // skip placeholder
+          const title = norm(row.querySelector('.card-title') ? row.querySelector('.card-title').textContent : '');
+          const desc = norm(row.querySelector('p') ? row.querySelector('p').textContent : '');
+          const combined = (title + ' ' + desc).trim();
+          const match = q === '' || combined.indexOf(q) !== -1;
+          row.style.display = match ? '' : 'none';
+          if (match) anyVisible = true;
+        });
+        if (noResultsRow) noResultsRow.style.display = anyVisible ? 'none' : '';
+      }
+
+      if (mobileCards && mobileCards.length) {
+        let anyCardVisible = false;
+        mobileCards.forEach(function(card){
+          const titleEl = card.querySelector('h6');
+          const descEl = card.querySelector('.truncated') || card.querySelector('p');
+          const title = norm(titleEl ? titleEl.textContent : '');
+          const desc = norm(descEl ? descEl.textContent : '');
+          const match = q === '' || (title + ' ' + desc).indexOf(q) !== -1;
+          card.style.display = match ? '' : 'none';
+          if (match) anyCardVisible = true;
+        });
+        // If both present, consider anyVisible OR anyCardVisible
+        anyVisible = anyVisible || anyCardVisible;
+      }
+
+      return anyVisible;
+    }
+
+    // Debounce user input a bit
+    let timer = null;
+    searchInput.addEventListener('input', function(){
+      clearTimeout(timer);
+      timer = setTimeout(filterOnce, 120);
+    });
+
+    clearBtn && clearBtn.addEventListener('click', function(){
+      searchInput.value = '';
+      filterOnce();
+      searchInput.focus();
+    });
+
+    // Initialize (in case there is an initial query param in URL)
+    document.addEventListener('DOMContentLoaded', function(){
+      // if there's a `q` query param, populate it
+      try{
+        const params = new URLSearchParams(location.search);
+        if (!searchInput.value && params.get('q')) {
+          searchInput.value = params.get('q');
+        }
+      }catch(e){}
+      filterOnce();
+    });
+  })();
+</script>
+{% endblock extra_scripts %}

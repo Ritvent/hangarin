@@ -105,6 +105,33 @@ img, .img-fluid {
   .list-group-item p { margin-bottom: 8px; }
 }
 
+/* Ensure the task search input added in the template becomes full-width on small screens */
+@media (max-width: 767px) {
+  /* target the search container added in the card header */
+  .card-body > .d-flex .ml-3 {
+    min-width: 0 !important; /* override inline min-width */
+    max-width: 100% !important; /* allow full width */
+    flex: 1 1 auto !important;
+    margin-left: 0.5rem !important;
+  }
+
+  .card-body > .d-flex .ml-3 .input-group {
+    width: 100% !important;
+  }
+
+  /* make the input fill the group */
+  #taskSearch {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* keep the clear button compact so it doesn't force overflow */
+  #taskSearchClear {
+    min-width: 34px !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+}
+
 /* Truncated description with expand-on-tap */
 .truncated {
   display: -webkit-box;
