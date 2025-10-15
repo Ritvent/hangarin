@@ -1,8 +1,11 @@
 {% load static %}
+{% load pwa %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    {% progressive_web_app_meta %}
     <!-- Required meta tags -->
+     <link rel="manifest" href="manifest.json" />
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}Hangarin{% endblock %}</title>
@@ -12,7 +15,6 @@
     <!-- endinject -->
     <!-- Plugin css for this page -->
 
-/>
     <link rel="stylesheet" href="{% static 'vendors/jvectormap/jquery-jvectormap.css' %}">
     <link rel="stylesheet" href="{% static 'vendors/flag-icon-css/css/flag-icon.min.css' %}">
     <link rel="stylesheet" href="{% static 'vendors/owl-carousel-2/owl.carousel.min.css' %}">
@@ -444,6 +446,19 @@
     });
   });
   </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('{% url "serviceworker" %}')
+        .then(function(registration) {
+          console.log('✅ ServiceWorker registration successful with scope: ', registration.scope);
+        })
+        .catch(function(error) {
+          console.log('❌ ServiceWorker registration failed: ', error);
+        });
+    });
+  }
+</script>
     <!-- End custom js for this page -->
   </body>
 </html>

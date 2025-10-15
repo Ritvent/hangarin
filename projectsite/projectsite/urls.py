@@ -15,16 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from hangarinorg.views import deploy
+from django.urls import path, include
+from hangarinorg.views import deploy, root_redirect
 from hangarinorg.views import HomePageView, TaskListView
 from hangarinorg import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.HomePageView.as_view(), name='dashboard'),
+    path('', root_redirect),
+    path('', include('pwa.urls')),
+    path('dashboard/', views.HomePageView.as_view(), name='dashboard'),
     path("deploy/", views.deploy, name="deploy"),
-    
     # ========== GENERAL TASK URLS ==========
     path('task/', views.TaskListView.as_view(), name='task_list'),
     path('task/create/', views.TaskCreateView.as_view(), name='task_create'),
@@ -60,4 +61,6 @@ urlpatterns = [
     path('subtask/create/', views.SubTaskCreateView.as_view(), name='subtask_create'),
     path('subtask/<int:pk>/edit/', views.SubTaskUpdateView.as_view(), name='subtask_edit'),
     path('subtask/<int:pk>/delete/', views.SubTaskDeleteView.as_view(), name='subtask_delete'),
+
+    
 ]
