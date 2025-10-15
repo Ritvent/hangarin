@@ -401,6 +401,11 @@ class CategoryTasksView(ListView):
                 qs = qs.filter(priority__pk=priority_pk)
             except (ValueError, TypeError):
                 pass
+        # support filtering by status via ?status=Completed|In Progress|Pending
+        status = self.request.GET.get('status')
+        if status:
+            qs = qs.filter(status__iexact=status)
+
         # support sorting via ?sort=<key>&dir=asc|desc
         sort_key = self.request.GET.get('sort', '').strip()
         sort_dir = self.request.GET.get('dir', 'asc')

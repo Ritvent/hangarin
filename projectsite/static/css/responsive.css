@@ -1,0 +1,207 @@
+/* Responsive overrides for Hangarin - non-invasive mobile improvements
+   Loaded after main style.css so rules override where needed.
+*/
+
+/* Make images scale down */
+img, .img-fluid {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Make containers take full width on small screens */
+@media (max-width: 991px) {
+  .container-fluid.page-body-wrapper,
+  .main-panel,
+  .content-wrapper {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Sidebar: hide on small screens to give more room to content */
+  .sidebar {
+    display: none !important;
+  }
+
+  /* Ensure the top navbar works as primary navigation */
+  .navbar .navbar-menu-wrapper {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Make page body full width when sidebar hidden */
+  .page-body-wrapper { margin-left: 0 !important; }
+
+  /* Stack dashboard/stat cards vertically */
+  .row .col-md-6, .row .col-lg-4, .row .col-sm-6 { width: 100% !important; max-width: 100% !important; }
+
+  /* Make search input full width */
+  form.search { display: block !important; }
+  form.search .form-control { width: 100% !important; }
+
+  /* Make action buttons wrap */
+  .navbar-nav .nav-item { white-space: normal !important; }
+}
+
+/* Tighter mobile rules */
+@media (max-width: 575px) {
+  /* Compact header padding */
+  .navbar { padding: 0.25rem 0.5rem !important; }
+
+  /* Reduce font sizes for menu and badges */
+  .menu-title { font-size: 14px !important; }
+  .menu-icon i { font-size: 18px !important; }
+
+  /* Make badges and status pills readable but compact */
+  .badge, .label, .status-badge {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.4rem !important;
+  }
+
+  /* Tables - horizontal scroll */
+  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Cards and list items spacing */
+  .card, .list-wrapper ul li { margin-bottom: 0.75rem !important; }
+
+  /* Make forms span full width */
+  .form-control { width: 100% !important; box-sizing: border-box; }
+
+  /* Tweak profile area */
+  .profile-name h5 { font-size: 14px !important; }
+  .profile-name span { display: none !important; }
+}
+
+/* Ensure modals and slideovers are full-screen on tiny devices */
+@media (max-width: 420px) {
+  .modal-dialog { max-width: 100% !important; margin: 0.25rem; }
+  .modal-content { height: calc(100vh - 1rem); overflow-y: auto; }
+}
+
+/* Improve touch targets for interactive elements */
+.button, .btn, a.nav-link, .nav-item { touch-action: manipulation; }
+
+/* Accessibility: increase hit area for small icons */
+.icon-btn { padding: 8px; border-radius: 6px; }
+
+/* Optional: make side-menu collapse accessible via .sidebar-open class if JS toggles it */
+@media (max-width: 991px) {
+  .sidebar.sidebar-open { display: block !important; position: fixed; left: 0; top: 0; bottom: 0; width: 260px; z-index: 1050; background: #fff; overflow-y: auto; }
+  .page-body-overlay { display: none; }
+}
+
+/* Small utilities */
+.hide-on-mobile { display: inherit; }
+@media (max-width: 991px) { .hide-on-mobile { display: none !important; } }
+
+/* Category tasks mobile improvements */
+@media (max-width: 767px) {
+  .list-group-item { padding: 12px !important; }
+  .list-group-item .d-flex { flex-direction: column; align-items: stretch; }
+  .list-group-item .d-flex > .ml-2 { margin-left: 0 !important; margin-top: 8px; }
+  .list-group-item .btn-group { display: flex; gap: 6px; }
+  .list-group-item .btn { padding: 8px 10px; min-width: 44px; }
+  .list-group-item .badge { margin-right: 6px; margin-top: 6px; }
+  .list-group-item h6 { font-size: 16px; margin-bottom: 6px; }
+  .list-group-item p { margin-bottom: 8px; }
+}
+
+/* Ensure the task search input added in the template becomes full-width on small screens */
+@media (max-width: 767px) {
+  /* target the search container added in the card header */
+  .card-body > .d-flex .ml-3 {
+    min-width: 0 !important; /* override inline min-width */
+    max-width: 100% !important; /* allow full width */
+    flex: 1 1 auto !important;
+    margin-left: 0.5rem !important;
+  }
+
+  .card-body > .d-flex .ml-3 .input-group {
+    width: 100% !important;
+  }
+
+  /* make the input fill the group */
+  #taskSearch {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* keep the clear button compact so it doesn't force overflow */
+  #taskSearchClear {
+    min-width: 34px !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+}
+
+/* Truncated description with expand-on-tap */
+.truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.task-card.expanded .truncated { -webkit-line-clamp: unset; }
+
+/* Mobile action buttons */
+.mobile-actions .btn { font-size: 14px; padding: 10px 8px; }
+.mobile-actions .btn i { margin-right: 6px; }
+
+
+/* End responsive overrides */
+/* Prevent todo list card from causing horizontal scroll */
+.list-wrapper { overflow: visible; }
+@media (max-width: 991px) {
+  .todo-list { max-width: 100%; box-sizing: border-box; }
+  .add-items { gap: 8px; }
+  .todo-list-input { flex: 1 1 auto; }
+}
+
+/* Mobile: prevent any horizontal page scrolling/swiping caused by wide tables or elements
+   - hide horizontal overflow on body/page wrapper
+   - force tables to wrap and allow long words to break
+   - reduce button min-width that can force rows wider than viewport
+*/
+@media (max-width: 767px) {
+  /* Make sure the overall page doesn't scroll horizontally */
+  html, body, .page-body-wrapper, .content-wrapper {
+    overflow-x: hidden !important;
+  }
+
+  /* Prevent table containers from creating an extra horizontal scroll area */
+  .table-responsive {
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: auto !important;
+  }
+
+  /* Allow table cells to wrap instead of forcing wide columns */
+  table {
+    width: 100% !important;
+    table-layout: fixed !important; /* helps columns respect available width */
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    white-space: normal !important; /* allow wrapping */
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Make long inline elements (badges, icons, buttons) wrap or shrink */
+  .badge, .label, .status-badge, .icon-item {
+    max-width: 100% !important;
+    display: inline-block !important;
+  }
+
+  /* Small buttons shouldn't force a wider row */
+  .btn, .btn-sm {
+    min-width: 0 !important;
+    white-space: normal !important;
+  }
+
+  /* Ensure task description and titles can wrap fully */
+  .card-title, .task-card h6, .task-card p, .truncated {
+    white-space: normal !important;
+  }
+
+  /* Hide any accidental horizontal scrollbars from elements that insist on large widths */
+  .nowrap-fix { max-width: 100%; box-sizing: border-box; }
+}
