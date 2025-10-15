@@ -16,6 +16,7 @@ from hangarinorg.forms import TaskForm, CategoryForm, PriorityForm, NoteForm, Su
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.db.models import Case, When, IntegerField, Value
+from django.shortcuts import redirect
 
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,9 @@ def deploy(request):
 
     return JsonResponse({"status": "Deployed successfully"})
 
+
+def root_redirect(request):
+    return redirect('dashboard')
 
 class HomePageView(ListView):
     model = Task
