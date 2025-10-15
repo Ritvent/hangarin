@@ -274,6 +274,17 @@
                           {{ task.title }}
                         </h6>
                         <div class="d-flex flex-wrap justify-content-end" style="gap: 4px;">
+                          <span class="badge
+                            {% if task.status == 'Completed' %}
+                              badge-success
+                            {% elif task.status == 'In Progress' %}
+                              badge-warning
+                            {% else %}
+                              badge-outline-warning
+                            {% endif %}
+                          ">
+                            {{ task.status }}
+                          </span>
                           <span class="badge 
                             {% if task.priority.priority_name == 'high' or task.priority.priority_name == 'critical' %}
                               badge-danger
@@ -288,17 +299,6 @@
                             {% endif %}
                           ">
                             {{ task.priority.priority_name|title }}
-                          </span>
-                          <span class="badge
-                            {% if task.status == 'Completed' %}
-                              badge-success
-                            {% elif task.status == 'In Progress' %}
-                              badge-warning
-                            {% else %}
-                              badge-outline-warning
-                            {% endif %}
-                          ">
-                            {{ task.status }}
                           </span>
                         </div>
                       </div>
