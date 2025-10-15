@@ -132,109 +132,77 @@
             </div>
           </div>
         </div>
-
         {% if tasks %}
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  {% comment %} Helper: build query preserving priority and toggling sort direction {% endcomment %}
-                  {% with req=request.GET %}
-                    {% with cur_sort=current_sort cur_dir=current_direction %}
-                      {% comment %} Compute toggle dir: if currently sorting this column asc -> desc, else asc {% endcomment %}
-                      <th>
-                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=title&amp;dir={% if cur_sort == 'title' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.task_col|default:'Task' }}
-                          {% if cur_sort == 'title' %}
-                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
-                          {% endif %}
-                        </a>
-                      </th>
-                      <th>
-                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=priority&amp;dir={% if cur_sort == 'priority' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.priority_col|default:'Priority' }}
-                          {% if cur_sort == 'priority' %}
-                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
-                          {% endif %}
-                        </a>
-                      </th>
-                      <th>
-                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=status&amp;dir={% if cur_sort == 'status' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.status_col|default:'Status' }}
-                          {% if cur_sort == 'status' %}
-                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
-                          {% endif %}
-                        </a>
-                      </th>
-                      <th>
-                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=deadline&amp;dir={% if cur_sort == 'deadline' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.due_col|default:'Due Date' }}
-                          {% if cur_sort == 'deadline' %}
-                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
-                          {% endif %}
-                        </a>
-                      </th>
-                      <th>Actions</th>
-                    {% endwith %}
-                  {% endwith %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for task in tasks %}
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="form-check form-check-muted m-0 mr-3">
-                        <label class="form-check-label">
-                          <input type="checkbox" class="form-check-input" {% if task.status == 'Completed' %}checked{% endif %}>
-                        </label>
-                      </div>
-                      <div>
-                        <h6 class="card-title {% if task.status == 'Completed' %}text-decoration-line-through{% endif %}">
-                          {{ task.title }}
-                        </h6>
-                        <p class="mb-0 small">{{ task.description|truncatechars:50 }}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                      {% if task.priority.priority_name == 'high' or task.priority.priority_name == 'critical' %}
-                      <span class="badge badge-danger">{{ task.priority.priority_name|title }}</span>
-                    {% elif task.priority.priority_name == 'medium' %}
-                      <span class="badge badge-warning">{{ task.priority.priority_name|title }}</span>
-                    {% elif task.priority.priority_name == 'optional' %}
-                      <span class="badge badge-info">{{ task.priority.priority_name|title }}</span>
-                    {% elif task.priority.priority_name == 'completed' %}
-                      <span class="badge badge-success">{{ task.priority.priority_name|title }}</span>
-                    {% else %}
-                      <span class="badge badge-primary">{{ task.priority.priority_name|title }}</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if task.status == 'Completed' %}
-                      <span class="badge badge-success">{{ task.status }}</span>
-                    {% elif task.status == 'In Progress' %}
-                      <span class="badge badge-warning">{{ task.status }}</span>
-                    {% else %}
-                      <span class="badge badge-outline-warning">{{ task.status }}</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <span>{{ task.deadline|date:"M d, Y" }}</span>
-                  </td>
-                  <td>
-                      <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-info btn-sm mr-1">
-                        <i class="mdi mdi-eye"></i>
-                      </a>
-                      <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline-primary btn-sm mr-1">
-                        <i class="mdi mdi-pencil"></i>
-                      </a>
-                      <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
-                        <i class="mdi mdi-delete"></i>
-                      </a>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+  <div class="row" id="taskContainer">
+    {% for task in tasks %}
+      <div class="col-12 col-md-6 col-lg-4 mb-4 task-card">
+        <div class="card bg-dark text-light h-100 shadow-sm border border-secondary">
+          <div class="card-body d-flex flex-column justify-content-between">
+
+            <!-- Header: Checkbox + Title -->
+            <div class="d-flex align-items-start justify-content-between mb-2">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" {% if task.status == 'Completed' %}checked{% endif %}>
+              </div>
+              <h5 class="card-title mb-0 {% if task.status == 'Completed' %}text-decoration-line-through text-muted{% endif %}">
+                {{ task.title }}
+              </h5>
+            </div>
+
+            <!-- Description -->
+            <p class="card-text small text-muted mb-3">{{ task.description|truncatechars:100 }}</p>
+
+            <!-- Details -->
+            <div class="mb-3">
+              <span class="badge 
+                {% if task.priority.priority_name == 'high' or task.priority.priority_name == 'critical' %}
+                  badge-danger
+                {% elif task.priority.priority_name == 'medium' %}
+                  badge-warning
+                {% elif task.priority.priority_name == 'optional' %}
+                  badge-info
+                {% elif task.priority.priority_name == 'completed' %}
+                  badge-success
+                {% else %}
+                  badge-primary
+                {% endif %}">
+                {{ task.priority.priority_name|title }}
+              </span>
+
+              {% if task.status == 'Completed' %}
+                <span class="badge badge-success">{{ task.status }}</span>
+              {% elif task.status == 'In Progress' %}
+                <span class="badge badge-warning">{{ task.status }}</span>
+              {% else %}
+                <span class="badge badge-outline-warning">{{ task.status }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Due Date -->
+            <p class="small text-muted mb-3">
+              <i class="mdi mdi-calendar"></i> {{ task.deadline|date:"M d, Y" }}
+            </p>
+
+            <!-- Actions -->
+            <div class="mt-auto d-flex justify-content-end">
+              <a href="{% url 'task_detail' task.pk %}" class="btn btn-outline-info btn-sm mr-1">
+                <i class="mdi mdi-eye"></i>
+              </a>
+              <a href="{% url 'task_edit' task.pk %}" class="btn btn-outline-primary btn-sm mr-1">
+                <i class="mdi mdi-pencil"></i>
+              </a>
+              <a href="{% url 'task_delete' task.pk %}" class="btn btn-outline-danger btn-sm">
+                <i class="mdi mdi-delete"></i>
+              </a>
+            </div>
+
           </div>
-        {% else %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+
           <div class="text-center py-5">
             <div class="icon icon-box-{{ category_color }} mx-auto mb-3" style="width: 80px; height: 80px;">
               <span class="mdi mdi-format-list-checks icon-item" style="font-size: 40px;"></span>
