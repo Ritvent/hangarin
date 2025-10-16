@@ -384,6 +384,9 @@ class SubTaskDeleteView(DeleteView):
  
 
 
+from django.db.models import Q, Case, When, Value, IntegerField
+from django.utils import timezone
+
 class CategoryTasksView(ListView):
     """Displays all tasks under a given category (dynamic by pk)."""
     model = Task
@@ -393,6 +396,7 @@ class CategoryTasksView(ListView):
     def get_queryset(self):
         category_pk = self.kwargs.get('pk')
         qs = Task.objects.filter(category__pk=category_pk)
+
         # support filtering by priority via query param ?priority=<pk>
         priority = self.request.GET.get('priority')
         if priority:
@@ -401,10 +405,19 @@ class CategoryTasksView(ListView):
                 qs = qs.filter(priority__pk=priority_pk)
             except (ValueError, TypeError):
                 pass
+
         # support filtering by status via ?status=Completed|In Progress|Pending
         status = self.request.GET.get('status')
         if status:
             qs = qs.filter(status__iexact=status)
+
+        # 🔍 NEW: support search via ?q=keyword
+        search = self.request.GET.get('q')
+        if search:
+            qs = qs.filter(
+                Q(title__icontains=search) |
+                Q(description__icontains=search)
+            )
 
         # support sorting via ?sort=<key>&dir=asc|desc
         sort_key = self.request.GET.get('sort', '').strip()
@@ -412,7 +425,6 @@ class CategoryTasksView(ListView):
 
         # Special-case: semantic ordering for priority names instead of alphabetical
         if sort_key == 'priority':
-            # Define preferred priority order (lower number = higher priority)
             priority_order_case = Case(
                 When(priority__priority_name__iexact='critical', then=Value(1)),
                 When(priority__priority_name__iexact='high', then=Value(2)),
@@ -422,7 +434,6 @@ class CategoryTasksView(ListView):
                 default=Value(999),
                 output_field=IntegerField(),
             )
-            # annotate and order by rank
             try:
                 qs = qs.annotate(priority_rank=priority_order_case)
                 if sort_dir == 'desc':
@@ -432,7 +443,6 @@ class CategoryTasksView(ListView):
             except Exception:
                 pass
         else:
-            # only allow a fixed set of sort keys to avoid unexpected ordering
             allowed_sorts = {
                 'title': 'title',
                 'task': 'title',
@@ -447,20 +457,23 @@ class CategoryTasksView(ListView):
                 try:
                     qs = qs.order_by(order_field)
                 except Exception:
-                    # if ordering fails for any reason, ignore and return unsorted qs
                     pass
+
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category_pk = self.kwargs.get('pk')
         category = Category.objects.filter(pk=category_pk).first()
+
         # expose available priorities and the selected priority for the template
         context['priorities'] = Priority.objects.all()
         context['selected_priority'] = self.request.GET.get('priority', '')
+
         # expose sorting state for the template
         context['current_sort'] = self.request.GET.get('sort', '')
         context['current_direction'] = self.request.GET.get('dir', 'asc')
+
         # base category info
         context.update({
             'category_name': category.category_name if category else 'Category',
@@ -476,9 +489,6 @@ class CategoryTasksView(ListView):
         completed = qs.filter(status__iexact='Completed').count()
         pending = qs.filter(status__iexact='Pending').count()
         in_progress = qs.filter(status__iexact='In Progress').count()
-
-        # Use 'deadline' field (exists on Task). Support both DateField and DateTimeField.
-        # Filter tasks with a non-null deadline less than today and not completed.
         overdue = qs.exclude(deadline__isnull=True).filter(deadline__lt=today).exclude(status__iexact='Completed').count()
 
         context.update({
@@ -488,6 +498,7 @@ class CategoryTasksView(ListView):
             'in_progress_tasks': in_progress,
             'overdue_tasks': overdue,
         })
+
         # Expose editable UI text labels so copy can be changed centrally
         context['labels'] = {
             'add_task': 'Add Task',
@@ -497,4 +508,8 @@ class CategoryTasksView(ListView):
             'status_col': 'Status',
             'due_col': 'Due Date',
         }
+
+        # 🔍 include current search query back to template for form value
+        context['search_query'] = self.request.GET.get('q', '')
+
         return context
