@@ -212,7 +212,7 @@
                         <h6 class="card-title {% if subtask.status == 'Completed' %}text-decoration-line-through{% endif %}">
                           {{ subtask.title }}
                         </h6>
-                        <p class="mb-0 small">{{ subtask.description|truncatechars:50 }}</p>
+                        <p class="mb-0 small">{{ subtask.parent_task.description|truncatechars:50 }}</p>
                       </div>
                     </div>
                   </td>
@@ -308,7 +308,7 @@
                           {% endwith %}
                         </div>
                       </div>
-                      <p class="small text-muted mb-2">{{ subtask.description|truncatechars:80 }}</p>
+                      <p class="small text-muted mb-2">{{ subtask.parent_task.description|truncatechars:80 }}</p>
                       <div class="d-flex justify-content-between align-items-center flex-wrap">
                         <span class="small text-muted mb-2 mb-sm-0">Due: {% if subtask.parent_task.deadline %}{{ subtask.parent_task.deadline|date:"M d, Y" }}{% endif %}</span>
                         <div>
