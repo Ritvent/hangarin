@@ -82,6 +82,7 @@
             <table class="table table-hover">
               <thead>
                 <tr>
+                  <th>Note</th>
                   <th>
                     <a href="?sort=task&amp;dir={% if current_sort == 'task' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">Task
                       {% if current_sort == 'task' %}
@@ -89,7 +90,6 @@
                       {% endif %}
                     </a>
                   </th>
-                  <th>Note</th>
                   <th>
                     <a href="?sort=created_at&amp;dir={% if current_sort == 'created_at' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">Created
                       {% if current_sort == 'created_at' %}
@@ -104,13 +104,12 @@
                 {% for note in notes %}
                   <tr data-task="{{ note.task.pk }}" data-created="{{ note.created_at|date:'Y-m-d' }}">
                     <td>
-                      <div>
-                        <h6 class="card-title mb-0">{{ note.task.title }}</h6>
-                        <p class="mb-0 small text-muted">{{ note.task.description|truncatechars:50 }}</p>
-                      </div>
+                      <p class="mb-0">{{ note.content|truncatechars:120 }}</p>
                     </td>
                     <td>
-                      <p class="mb-0">{{ note.content|truncatechars:120 }}</p>
+                      <div>
+                        <h6 class="card-title mb-0">{{ note.task.title }}</h6>
+                      </div>
                     </td>
                     <td><span>{{ note.created_at|date:"M d, Y H:i" }}</span></td>
                     <td>
@@ -144,12 +143,15 @@
                   <div class="card bg-dark text-light border border-mobile-info">
                     <div class="card-body">
                       <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h6 class="mb-0 flex-grow-1 mr-2">{{ note.task.title }}</h6>
+                        <div class="flex-grow-1 mr-2">
+                          <p class="mb-2 text-light" style="font-size:1.00rem; font-weight:500;">{{ note.content|truncatechars:140 }}</p>
+                          <div class="mb-1"><strong>Task:</strong></div>
+                          <h6 class="mb-0">{{ note.task.title }}</h6>
+                        </div>
                         <div class="d-flex flex-wrap justify-content-end" style="gap: 4px;">
-                          <span class="badge badge-outline-info">{{ note.created_at|date:'M d, Y' }}</span>
+                          <!-- date removed for mobile view -->
                         </div>
                       </div>
-                      <p class="small text-muted mb-2">{{ note.content|truncatechars:140 }}</p>
                       <div class="d-flex justify-content-between align-items-center flex-wrap">
                         <div>
                           <a href="{% url 'task_detail' note.task.pk %}" class="btn btn-outline-info btn-sm mr-1"><i class="mdi mdi-eye"></i></a>
@@ -213,8 +215,8 @@
     const q = norm(searchInput.value);
     const selectedTask = document.getElementById('taskFilter') ? document.getElementById('taskFilter').value : '';
     let anyVisible = false;
-    function matchesFilters(elTask, elContent){
-      const text = (norm(elTask) + ' ' + norm(elContent)).trim();
+    function matchesFilters(elTask, combinedText){
+      const text = (norm(combinedText) + ' ' + norm(elTask)).trim();
       if (q !== '' && text.indexOf(q) === -1) return false;
       if (selectedTask && selectedTask !== '' && String(elTask) !== String(selectedTask)) return false;
       return true;
@@ -223,8 +225,8 @@
       Array.from(tableBody.querySelectorAll('tr')).forEach(function(row){
         if (row.id === 'noResultsRow') return;
         const task = row.getAttribute('data-task') || '';
-        const content = row.querySelector('td:nth-child(2)') ? row.querySelector('td:nth-child(2)').textContent : '';
-        const match = matchesFilters(task, content);
+        const combined = row.textContent || '';
+        const match = matchesFilters(task, combined);
         row.style.display = match ? '' : 'none';
         if (match) anyVisible = true;
       });
@@ -234,8 +236,8 @@
       let anyCardVisible = false;
       mobileCards.forEach(function(card){
         const task = card.getAttribute('data-task') || '';
-        const content = card.querySelector('p') ? card.querySelector('p').textContent : '';
-        const match = matchesFilters(task, content);
+        const combined = card.textContent || '';
+        const match = matchesFilters(task, combined);
         card.style.display = match ? '' : 'none';
         if (match) anyCardVisible = true;
       });
