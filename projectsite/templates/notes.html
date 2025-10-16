@@ -77,50 +77,38 @@
           </div>
         </div>
 
-        <div class="table-responsive d-none d-md-block">
+        <!-- Desktop Box View -->
+        <div class="d-none d-md-block">
           {% if notes %}
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Note</th>
-                  <th>
-                    <a href="?sort=task&amp;dir={% if current_sort == 'task' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">Task
-                      {% if current_sort == 'task' %}
-                        {% if current_direction == 'asc' %}▲{% else %}▼{% endif %}
-                      {% endif %}
-                    </a>
-                  </th>
-                  <th>
-                    <a href="?sort=created_at&amp;dir={% if current_sort == 'created_at' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">Created
-                      {% if current_sort == 'created_at' %}
-                        {% if current_direction == 'asc' %}▲{% else %}▼{% endif %}
-                      {% endif %}
-                    </a>
-                  </th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for note in notes %}
-                  <tr data-task="{{ note.task.pk }}" data-created="{{ note.created_at|date:'Y-m-d' }}">
-                    <td>
-                      <p class="mb-0">{{ note.content|truncatechars:120 }}</p>
-                    </td>
-                    <td>
-                      <div>
-                        <h6 class="card-title mb-0">{{ note.task.title }}</h6>
+            <div class="row" id="desktopNotesContainer">
+              {% for note in notes %}
+                <div class="col-lg-6 col-xl-4 mb-4 note-box" data-task="{{ note.task.pk }}" data-created="{{ note.created_at|date:'Y-m-d' }}">
+                  <div class="card bg-dark text-light border border-info h-100">
+                    <div class="card-body d-flex flex-column">
+                      <div class="flex-grow-1 mb-3">
+                        <p class="mb-3 text-light" style="font-size:1.00rem; font-weight:500;">{{ note.content|truncatechars:140 }}</p>
+                        <div class="mb-1"><strong class="text-info">Task:</strong></div>
+                        <h6 class="mb-0">{{ note.task.title }}</h6>
                       </div>
-                    </td>
-                    <td><span>{{ note.created_at|date:"M d, Y H:i" }}</span></td>
-                    <td>
-                      <a href="{% url 'task_detail' note.task.pk %}" class="btn btn-outline-info btn-sm mr-1"><i class="mdi mdi-eye"></i></a>
-                      <a href="{% url 'note_edit' note.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="mdi mdi-pencil"></i></a>
-                      <a href="{% url 'note_delete' note.pk %}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-delete"></i></a>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+                      <div class="d-flex justify-content-start align-items-center mt-auto pt-3 border-top border-secondary">
+                        <a href="{% url 'task_detail' note.task.pk %}" class="btn btn-outline-info btn-sm mr-2" title="View Task">
+                          <i class="mdi mdi-eye"></i>
+                        </a>
+                        <a href="{% url 'note_edit' note.pk %}" class="btn btn-outline-primary btn-sm mr-2" title="Edit Note">
+                          <i class="mdi mdi-pencil"></i>
+                        </a>
+                        <a href="{% url 'note_delete' note.pk %}" class="btn btn-outline-danger btn-sm" title="Delete Note">
+                          <i class="mdi mdi-delete"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            <div id="noResultsDesktop" class="text-center py-5" style="display: none;">
+              <h5 class="text-muted">No notes match your search.</h5>
+            </div>
           {% else %}
             <div class="text-center py-5">
               <div class="icon icon-box-info mx-auto mb-3" style="width: 80px; height: 80px;">
@@ -135,6 +123,7 @@
           {% endif %}
         </div>
 
+        <!-- Mobile Card View -->
         <div class="d-block d-md-none mt-4">
           {% if notes %}
             <div class="row" id="taskContainer">
@@ -147,9 +136,6 @@
                           <p class="mb-2 text-light" style="font-size:1.00rem; font-weight:500;">{{ note.content|truncatechars:140 }}</p>
                           <div class="mb-1"><strong>Task:</strong></div>
                           <h6 class="mb-0">{{ note.task.title }}</h6>
-                        </div>
-                        <div class="d-flex flex-wrap justify-content-end" style="gap: 4px;">
-                          <!-- date removed for mobile view -->
                         </div>
                       </div>
                       <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -191,6 +177,16 @@
     #filtersForm { flex-direction: column !important; gap: 6px; }
     #filtersForm .form-group { width: 100% !important; }
   }
+  @media (min-width: 768px) {
+    .note-box .card {
+      border-width: 2px !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .note-box .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(23, 162, 184, 0.3);
+    }
+  }
 </style>
 
 <script>
@@ -200,51 +196,51 @@
   const searchButton = searchForm ? searchForm.querySelector('button[type="submit"]') : null;
   if (!searchInput) return;
   function norm(s){ return (s||'').toString().toLowerCase().trim(); }
-  const tableBody = document.querySelector('table.table tbody');
+  
+  const desktopBoxes = document.querySelectorAll('.note-box');
   const mobileCards = document.querySelectorAll('.note-card');
-  let noResultsRow = document.getElementById('noResultsRow');
-  if (!noResultsRow && tableBody) {
-    noResultsRow = document.createElement('tr');
-    noResultsRow.id = 'noResultsRow';
-    noResultsRow.innerHTML = '<td colspan="4" class="text-center text-muted py-4">No notes match your search.</td>';
-    noResultsRow.style.display = 'none';
-    tableBody.parentNode && tableBody.appendChild(noResultsRow);
-  }
-  function parseDateYmd(s){ if (!s) return null; const parts = s.split('-'); if (parts.length !== 3) return null; return new Date(parts[0], parts[1]-1, parts[2]); }
+  const noResultsDesktop = document.getElementById('noResultsDesktop');
+  
   function filterNotes(){
     const q = norm(searchInput.value);
     const selectedTask = document.getElementById('taskFilter') ? document.getElementById('taskFilter').value : '';
     let anyVisible = false;
+    
     function matchesFilters(elTask, combinedText){
       const text = (norm(combinedText) + ' ' + norm(elTask)).trim();
       if (q !== '' && text.indexOf(q) === -1) return false;
       if (selectedTask && selectedTask !== '' && String(elTask) !== String(selectedTask)) return false;
       return true;
     }
-    if (tableBody) {
-      Array.from(tableBody.querySelectorAll('tr')).forEach(function(row){
-        if (row.id === 'noResultsRow') return;
-        const task = row.getAttribute('data-task') || '';
-        const combined = row.textContent || '';
+    
+    // Filter desktop boxes
+    if (desktopBoxes && desktopBoxes.length) {
+      desktopBoxes.forEach(function(box){
+        const task = box.getAttribute('data-task') || '';
+        const combined = box.textContent || '';
         const match = matchesFilters(task, combined);
-        row.style.display = match ? '' : 'none';
+        box.style.display = match ? '' : 'none';
         if (match) anyVisible = true;
       });
-      if (noResultsRow) noResultsRow.style.display = anyVisible ? 'none' : '';
+      if (noResultsDesktop) {
+        noResultsDesktop.style.display = anyVisible ? 'none' : 'block';
+      }
     }
+    
+    // Filter mobile cards
     if (mobileCards && mobileCards.length) {
-      let anyCardVisible = false;
       mobileCards.forEach(function(card){
         const task = card.getAttribute('data-task') || '';
         const combined = card.textContent || '';
         const match = matchesFilters(task, combined);
         card.style.display = match ? '' : 'none';
-        if (match) anyCardVisible = true;
+        if (match) anyVisible = true;
       });
-      anyVisible = anyVisible || anyCardVisible;
     }
+    
     return anyVisible;
   }
+  
   if (searchForm) {
     searchForm.addEventListener('submit', function(e){ e.preventDefault(); filterNotes(); return false; });
   }
