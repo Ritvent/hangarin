@@ -1,0 +1,554 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category_name }} Subtasks - Hangarin{% endblock %}
+
+{% block content %}
+<!-- Category Header -->
+<div class="row">
+  <div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between">
+          <div class="d-flex align-items-center mb-3 mb-md-0">
+            <div class="icon icon-box-warning mr-3">
+              <span class="fa fa-pencil-square-o"></span>
+            </div>
+            <div>
+              <h2 class="text-warning mb-0"> {{ category_name }} </h2>
+              <p class="text-muted mb-0">Manage your {{ category_name|lower }} subtasks and priorities</p>
+            </div>
+          </div>
+          <div class="d-flex align-items-center">
+            <div class="badge border border-warning text-warning badge-lg mr-3">
+              {{ subtasks.count }} Subtask{{ subtasks.count|pluralize }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Subtask Statistics -->
+<div class="row">
+  <div class="col-6 col-md-3 mb-3 mb-md-4">
+    <div class="card bg-dark text-light">
+      <div class="card-body d-flex flex-column align-items-start justify-content-between">
+        <div class="d-flex w-100 justify-content-between align-items-center">
+          <h3 class="mb-0">{{ subtasks.count }}</h3>
+          <div class="icon icon-box-{{ category_color }}">
+            <span class="mdi mdi-format-list-checks icon-item"></span>
+          </div>
+        </div>
+        <h6 class="text-muted font-weight-normal mt-3">Total Subtasks</h6>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 mb-3 mb-md-4">
+    <div class="card bg-dark text-light">
+      <div class="card-body d-flex flex-column align-items-start justify-content-between">
+        <div class="d-flex w-100 justify-content-between align-items-center">
+          <h3 class="mb-0">{{ subtasks|length|add:"-2" }}</h3>
+          <div class="icon icon-box-success">
+            <span class="mdi mdi-check-circle icon-item"></span>
+          </div>
+        </div>
+        <h6 class="text-muted font-weight-normal mt-3">Completed</h6>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 mb-3 mb-md-4">
+    <div class="card bg-dark text-light">
+      <div class="card-body d-flex flex-column align-items-start justify-content-between">
+        <div class="d-flex w-100 justify-content-between align-items-center">
+          <h3 class="mb-0">{{ subtasks|length|add:"-1" }}</h3>
+          <div class="icon icon-box-warning">
+            <span class="mdi mdi-clock icon-item"></span>
+          </div>
+        </div>
+        <h6 class="text-muted font-weight-normal mt-3">Pending</h6>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 mb-3 mb-md-4">
+    <div class="card bg-dark text-light">
+      <div class="card-body d-flex flex-column align-items-start justify-content-between">
+        <div class="d-flex w-100 justify-content-between align-items-center">
+          <h3 class="mb-0">0</h3>
+          <div class="icon icon-box-danger">
+            <span class="mdi mdi-alert-circle icon-item"></span>
+          </div>
+        </div>
+        <h6 class="text-muted font-weight-normal mt-3">Overdue</h6>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Subtasks List -->
+<div class="row">
+  <div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-4">
+          <!-- Search bar - full width on mobile -->
+          <div class="mb-3">
+            <form id="searchForm" method="get" action="">
+              <div class="input-group input-group-sm">
+                <input 
+                  id="taskSearch"
+                  name="q"
+                  type="search" 
+                  class="form-control form-control-sm text-light bg-dark border-secondary" 
+                  placeholder="Search subtasks by title or description"
+                  value="{{ request.GET.q|default:'' }}"
+                  aria-label="Search subtasks">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="submit">
+                    <i class="mdi mdi-magnify"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+          
+          <!-- Filters - wrap on mobile -->
+          <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-between">
+            <div class="mb-2 mb-sm-0">
+                <form method="get" class="mr-2 d-flex align-items-center" id="filtersForm">
+                  <div class="form-group mb-0 mr-2">
+                    <select id="priorityFilter" name="priority" onchange="this.form.submit()" class="form-control form-control-sm">
+                      <option value="">All priorities</option>
+                      {% for p in priorities %}
+                        <option value="{{ p.pk }}" {% if selected_priority == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.priority_name|title }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <div class="form-group mb-0 mr-2">
+                    <select id="statusFilter" name="status" onchange="this.form.submit()" class="form-control form-control-sm">
+                      <option value="">All statuses</option>
+                      <option value="Completed" {% if request.GET.status == 'Completed' %}selected{% endif %}>Completed</option>
+                      <option value="In Progress" {% if request.GET.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                      <option value="Pending" {% if request.GET.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                  </div>
+                </form>
+            </div>
+            <div class="d-flex">
+              <button id="orderByDateBtn" type="button" class="btn btn-outline-primary btn-sm mr-2">
+                 <a href="?sort=deadline&amp;dir=asc">Order by date</a>
+                <span id="orderByDateIcon" style="margin-left:6px;">
+                  {% if current_sort == 'deadline' %}
+                    {% if current_direction == 'asc' %}▲{% else %}▼{% endif %}
+                  {% endif %}
+                </span>
+              </button>
+              <a href="{% url 'subtask_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }} btn-sm">
+                <i class="mdi mdi-plus mr-1"></i>
+                <span class="d-none d-sm-inline">Add Subtask</span>
+                <span class="d-inline d-sm-none">Add</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="table-responsive d-none d-md-block">
+          {% if subtasks %}
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Subtask</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for subtask in subtasks %}
+                  <tr data-priority="{{ subtask.parent_task.priority.pk }}" data-status="{{ subtask.status }}" data-deadline="{% if subtask.parent_task.deadline %}{{ subtask.parent_task.deadline|date:'Y-m-d' }}{% endif %}">
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="form-check form-check-muted m-0 mr-3">
+                        <label class="form-check-label">
+                          <input type="checkbox" class="form-check-input" {% if subtask.status == 'Completed' %}checked{% endif %}>
+                        </label>
+                      </div>
+                      <div>
+                        <h6 class="card-title {% if subtask.status == 'Completed' %}text-decoration-line-through{% endif %}">
+                          {{ subtask.title }}
+                        </h6>
+                        <p class="mb-0 small">{{ subtask.description|truncatechars:50 }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {% with p=subtask.parent_task.priority %}
+                      {% if p.priority_name == 'high' or p.priority_name == 'critical' %}
+                        <span class="badge badge-danger">{{ p.priority_name|title }}</span>
+                      {% elif p.priority_name == 'medium' %}
+                        <span class="badge badge-warning">{{ p.priority_name|title }}</span>
+                      {% elif p.priority_name == 'optional' %}
+                        <span class="badge badge-info">{{ p.priority_name|title }}</span>
+                      {% elif p.priority_name == 'completed' %}
+                        <span class="badge badge-success">{{ p.priority_name|title }}</span>
+                      {% else %}
+                        <span class="badge badge-primary">{{ p.priority_name|title }}</span>
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                  <td>
+                    {% if subtask.status == 'Completed' %}
+                      <span class="badge badge-success">{{ subtask.status }}</span>
+                    {% elif subtask.status == 'In Progress' %}
+                      <span class="badge badge-warning">{{ subtask.status }}</span>
+                    {% else %}
+                      <span class="badge badge-outline-warning">{{ subtask.status }}</span>
+                    {% endif %}
+                  </td>
+          <td><span>{% if subtask.parent_task.deadline %}{{ subtask.parent_task.deadline|date:"M d, Y" }}{% endif %}</span></td>
+          <td>
+            <a href="{% url 'task_detail' subtask.parent_task.pk %}" class="btn btn-outline-info btn-sm mr-1"><i class="mdi mdi-eye"></i></a>
+                      <a href="{% url 'subtask_edit' subtask.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="mdi mdi-pencil"></i></a>
+                      <a href="{% url 'subtask_delete' subtask.pk %}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-delete"></i></a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div class="text-center py-5">
+              <div class="icon icon-box-{{ category_color }} mx-auto mb-3" style="width: 80px; height: 80px;">
+                <span class="mdi mdi-format-list-checks icon-item" style="font-size: 40px;"></span>
+              </div>
+              <h5 class="text-muted">No {{ category_name|lower }} subtasks yet</h5>
+              <p class="text-muted mb-4">Start by creating your first {{ category_name|lower }} subtask</p>
+              <a href="{% url 'subtask_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }}">
+                <i class="mdi mdi-plus mr-1"></i>Create Your First Subtask
+              </a>
+            </div>
+          {% endif %}
+        </div>
+        <!-- End Desktop Table -->
+
+        <!-- Mobile Subtask Cards -->
+        <div class="d-block d-md-none mt-4">
+          {% if subtasks %}
+            <div class="row" id="taskContainer">
+              {% for subtask in subtasks %}
+                <div class="col-12 mb-3 task-card" data-priority="{{ subtask.parent_task.priority.pk }}" data-status="{{ subtask.status }}" data-deadline="{% if subtask.parent_task.deadline %}{{ subtask.parent_task.deadline|date:'Y-m-d' }}{% endif %}">
+                  <div class="card bg-dark text-light border border-mobile-{{ category_color }}">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0 flex-grow-1 mr-2 {% if subtask.status == 'Completed' %}text-decoration-line-through{% endif %}">
+                          {{ subtask.title }}
+                        </h6>
+                        <div class="d-flex flex-wrap justify-content-end" style="gap: 4px;">
+                          <span class="badge
+                            {% if subtask.status == 'Completed' %}
+                              badge-success
+                            {% elif subtask.status == 'In Progress' %}
+                              badge-warning
+                            {% else %}
+                              badge-outline-warning
+                            {% endif %}
+                          ">
+                            {{ subtask.status }}
+                          </span>
+                          {% with p=subtask.parent_task.priority %}
+                            <span class="badge 
+                              {% if p.priority_name == 'high' or p.priority_name == 'critical' %}
+                                badge-danger
+                              {% elif p.priority_name == 'medium' %}
+                                badge-warning
+                              {% elif p.priority_name == 'optional' %}
+                                badge-info
+                              {% elif p.priority_name == 'completed' %}
+                                badge-success
+                              {% else %}
+                                badge-primary
+                              {% endif %}
+                            ">
+                              {{ p.priority_name|title }}
+                            </span>
+                          {% endwith %}
+                        </div>
+                      </div>
+                      <p class="small text-muted mb-2">{{ subtask.description|truncatechars:80 }}</p>
+                      <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <span class="small text-muted mb-2 mb-sm-0">Due: {% if subtask.parent_task.deadline %}{{ subtask.parent_task.deadline|date:"M d, Y" }}{% endif %}</span>
+                        <div>
+                          <a href="{% url 'task_detail' subtask.parent_task.pk %}" class="btn btn-outline-info btn-sm mr-1"><i class="mdi mdi-eye"></i></a>
+                          <a href="{% url 'subtask_edit' subtask.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="mdi mdi-pencil"></i></a>
+                          <a href="{% url 'subtask_delete' subtask.pk %}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-delete"></i></a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <h5 class="text-muted">No {{ category_name|lower }} subtasks yet</h5>
+              <a href="{% url 'subtask_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }}">
+                <i class="mdi mdi-plus mr-1"></i> Add Your First Subtask
+              </a>
+            </div>
+          {% endif %}
+        </div>
+        <!-- End Mobile Subtask Cards -->
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_scripts %}
+<style>
+  @media (max-width: 767px) {
+    .border-mobile-primary { border-color: #007bff !important; }
+    .border-mobile-success { border-color: #28a745 !important; }
+    .border-mobile-warning { border-color: #ffc107 !important; }
+    .border-mobile-danger  { border-color: #dc3545 !important; }
+    .border-mobile-info    { border-color: #17a2b8 !important; }
+    .border-mobile-dark    { border-color: #343a40 !important; }
+
+    .task-card .card {
+      border-width: 2px !important;
+    }
+  }
+  /* Filters responsive tweaks */
+  @media (max-width: 575px) {
+    #filtersForm { flex-direction: column !important; gap: 6px; }
+    #filtersForm .form-group { width: 100% !important; }
+    #filtersForm input[type="date"], #filtersForm select { width: 100% !important; }
+    .d-flex > .d-flex { width: 100%; justify-content: flex-end; margin-top: 8px; }
+  }
+  
+  @media (max-width: 575px) {
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .card-title {
+      font-size: 0.95rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    const searchInput = document.getElementById('taskSearch');
+    const searchForm = document.getElementById('searchForm');
+    const searchButton = searchForm ? searchForm.querySelector('button[type="submit"]') : null;
+    
+    if (!searchInput) return;
+    
+    function norm(s){ return (s||'').toString().toLowerCase().trim(); }
+    const tableBody = document.querySelector('table.table tbody');
+    const mobileCards = document.querySelectorAll('.task-card');
+    let noResultsRow = document.getElementById('noResultsRow');
+    
+    if (!noResultsRow && tableBody) {
+      noResultsRow = document.createElement('tr');
+      noResultsRow.id = 'noResultsRow';
+      noResultsRow.innerHTML = '<td colspan="6" class="text-center text-muted py-4">No subtasks match your search.</td>';
+      noResultsRow.style.display = 'none';
+      tableBody.parentNode && tableBody.appendChild(noResultsRow);
+    }
+    
+    function parseDateYmd(s){
+      if (!s) return null;
+      const parts = s.split('-');
+      if (parts.length !== 3) return null;
+      return new Date(parts[0], parts[1]-1, parts[2]);
+    }
+
+    function filterTasks(){
+      const q = norm(searchInput.value);
+      const selectedPriority = document.getElementById('priorityFilter') ? document.getElementById('priorityFilter').value : '';
+      const selectedStatus = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+      const dateFromVal = document.getElementById('dateFrom') ? document.getElementById('dateFrom').value : '';
+      const dateToVal = document.getElementById('dateTo') ? document.getElementById('dateTo').value : '';
+      const dateFrom = parseDateYmd(dateFromVal);
+      const dateTo = parseDateYmd(dateToVal);
+
+      let anyVisible = false;
+
+      function matchesFilters(elTitle, elDesc, elPriority, elStatus, elDeadline){
+        // text match
+        const text = (norm(elTitle) + ' ' + norm(elDesc)).trim();
+        if (q !== '' && text.indexOf(q) === -1) return false;
+        // priority match
+        if (selectedPriority && selectedPriority !== '' && elPriority !== undefined && elPriority !== null) {
+          if (String(elPriority) !== String(selectedPriority)) return false;
+        }
+        // status match
+        if (selectedStatus && selectedStatus !== '' && elStatus) {
+          if (String(elStatus) !== String(selectedStatus)) return false;
+        }
+        // date range match
+        if ((dateFrom || dateTo) && elDeadline) {
+          const d = parseDateYmd(elDeadline);
+          if (!d) return false;
+          if (dateFrom && d < dateFrom) return false;
+          if (dateTo && d > dateTo) return false;
+        }
+        return true;
+      }
+
+      if (tableBody) {
+        Array.from(tableBody.querySelectorAll('tr')).forEach(function(row){
+          if (row.id === 'noResultsRow') return;
+          const title = row.querySelector('.card-title') ? row.querySelector('.card-title').textContent : '';
+          const desc = row.querySelector('p') ? row.querySelector('p').textContent : '';
+          const priority = row.getAttribute('data-priority') || '';
+          const status = row.getAttribute('data-status') || '';
+          const deadline = row.getAttribute('data-deadline') || '';
+          const match = matchesFilters(title, desc, priority, status, deadline);
+          row.style.display = match ? '' : 'none';
+          if (match) anyVisible = true;
+        });
+        if (noResultsRow) noResultsRow.style.display = anyVisible ? 'none' : '';
+      }
+
+      if (mobileCards && mobileCards.length) {
+        let anyCardVisible = false;
+        mobileCards.forEach(function(card){
+          const titleEl = card.querySelector('h6');
+          const descEl = card.querySelector('p');
+          const title = titleEl ? titleEl.textContent : '';
+          const desc = descEl ? descEl.textContent : '';
+          const priority = card.getAttribute('data-priority') || '';
+          const status = card.getAttribute('data-status') || '';
+          const deadline = card.getAttribute('data-deadline') || '';
+          const match = matchesFilters(title, desc, priority, status, deadline);
+          card.style.display = match ? '' : 'none';
+          if (match) anyCardVisible = true;
+        });
+        anyVisible = anyVisible || anyCardVisible;
+      }
+
+      return anyVisible;
+    }
+    
+    // Handle form submission (Enter key or button click)
+    if (searchForm) {
+      searchForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        filterTasks();
+        return false;
+      });
+    }
+    
+    // Handle search button click directly
+    if (searchButton) {
+      searchButton.addEventListener('click', function(e){
+        e.preventDefault();
+        filterTasks();
+        return false;
+      });
+    }
+    
+    // Handle Enter key directly on input
+    searchInput.addEventListener('keypress', function(e){
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        e.preventDefault();
+        filterTasks();
+        return false;
+      }
+    });
+    
+    // Handle typing with debounce
+    let timer = null;
+    searchInput.addEventListener('input', function(){
+      clearTimeout(timer);
+      timer = setTimeout(filterTasks, 120);
+    });
+    
+    document.addEventListener('DOMContentLoaded', function(){
+      filterTasks();
+      
+      // wire Order by date toggle button
+      const orderBtn = document.getElementById('orderByDateBtn');
+      if (orderBtn) {
+        orderBtn.addEventListener('click', function(evt){
+          try{
+            const params = new URLSearchParams(window.location.search);
+            const curSort = params.get('sort');
+            const curDir = params.get('dir') || 'asc';
+            let newDir = 'asc';
+            if (curSort === 'deadline') {
+              newDir = curDir === 'asc' ? 'desc' : 'asc';
+            } else {
+              newDir = 'asc';
+            }
+
+            // Update arrow icon immediately
+            const icon = document.getElementById('orderByDateIcon');
+            if (icon) icon.textContent = newDir === 'asc' ? '▲' : '▼';
+
+            // Client-side sort of visible rows/cards by data-deadline
+            function dateValFrom(str){
+              if (!str) return null;
+              const d = parseDateYmd(str);
+              return d ? d.getTime() : null;
+            }
+
+            // Sort table rows (preserve header and noResultsRow)
+            if (tableBody) {
+              const rows = Array.from(tableBody.querySelectorAll('tr')).filter(r => r.id !== 'noResultsRow');
+              // Only consider visible rows
+              const visibleRows = rows.filter(r => r.style.display !== 'none');
+              visibleRows.sort(function(a,b){
+                const da = dateValFrom(a.getAttribute('data-deadline')) || 0;
+                const db = dateValFrom(b.getAttribute('data-deadline')) || 0;
+                return newDir === 'asc' ? da - db : db - da;
+              });
+              // Re-append in sorted order
+              visibleRows.forEach(r => tableBody.appendChild(r));
+            }
+
+            // Sort mobile cards
+            if (mobileCards && mobileCards.length) {
+              const container = document.getElementById('taskContainer');
+              if (container) {
+                const cards = Array.from(container.querySelectorAll('.task-card')).filter(c => c.style.display !== 'none');
+                cards.sort(function(a,b){
+                  const da = dateValFrom(a.getAttribute('data-deadline')) || 0;
+                  const db = dateValFrom(b.getAttribute('data-deadline')) || 0;
+                  return newDir === 'asc' ? da - db : db - da;
+                });
+                cards.forEach(c => container.appendChild(c));
+              }
+            }
+
+            // Update the URL via pushState so the sort is reflected without reloading
+            params.set('sort', 'deadline');
+            params.set('dir', newDir);
+            const newUrl = window.location.pathname + '?' + params.toString();
+            history.pushState({}, '', newUrl);
+
+            // Prevent default navigation (we already applied client-side sort)
+            evt.preventDefault();
+          }catch(e){ console.error(e); }
+        });
+      }
+    });
+  })();
+</script>
+{% endblock extra_scripts %}

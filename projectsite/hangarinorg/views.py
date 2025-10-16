@@ -382,6 +382,49 @@ class SubTaskDeleteView(DeleteView):
     context_object_name = 'subtask'
 
 
+class SubTaskListView(ListView):
+    """List all subtasks, with optional filtering by parent task via ?parent=<task_pk>."""
+    model = SubTask
+    template_name = 'subtasks.html'
+    context_object_name = 'subtasks'
+
+    def get_queryset(self):
+        # SubTask doesn't have its own priority/deadline; use parent task's relations
+        qs = SubTask.objects.select_related('parent_task', 'parent_task__priority')
+        parent = self.request.GET.get('parent')
+        if parent:
+            try:
+                parent_pk = int(parent)
+                qs = qs.filter(parent_task__pk=parent_pk)
+            except (ValueError, TypeError):
+                pass
+        # optional search
+        q = self.request.GET.get('q')
+        if q:
+            qs = qs.filter(title__icontains=q)
+        return qs.order_by('-updated_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['priorities'] = Priority.objects.all()
+        context['selected_priority'] = self.request.GET.get('priority', '')
+        context.update({
+            'category_name': 'Subtasks',
+            'category_color': 'primary',
+            'category_pk': None,
+            'labels': {
+                'add_task': 'Add Subtask',
+                'create_first': 'Create Your First Subtask',
+                'task_col': 'Subtask',
+                'priority_col': 'Priority',
+                'status_col': 'Status',
+                'due_col': 'Due Date',
+            }
+        })
+        context['search_query'] = self.request.GET.get('q', '')
+        return context
+
+
  
 
 
