@@ -56,8 +56,10 @@ urlpatterns = [
     path('note/create/', views.NoteCreateView.as_view(), name='note_create'),
     path('note/<int:pk>/edit/', views.NoteUpdateView.as_view(), name='note_edit'),
     path('note/<int:pk>/delete/', views.NoteDeleteView.as_view(), name='note_delete'),
+    path('notes/', views.NoteListView.as_view(), name='note_list'),
     
     # ========== SUBTASK CRUD URLs ==========
+    path('subtask/', views.SubTaskListView.as_view(), name='subtask_list'),
     path('subtask/create/', views.SubTaskCreateView.as_view(), name='subtask_create'),
     path('subtask/<int:pk>/edit/', views.SubTaskUpdateView.as_view(), name='subtask_edit'),
     path('subtask/<int:pk>/delete/', views.SubTaskDeleteView.as_view(), name='subtask_delete'),

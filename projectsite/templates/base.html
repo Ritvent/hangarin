@@ -130,11 +130,19 @@
             </div>
           </li>
           <li class="nav-item menu-items">
-            <a class="nav-link" href="pages/forms/basic_elements.html">
+            <a class="nav-link" href="{% url 'subtask_list' %}">
               <span class="menu-icon">
                 <i class="mdi mdi-playlist-play"></i>
               </span>
-              <span class="menu-title">Form Elements</span>
+              <span class="menu-title">Subtask</span>
+            </a>
+          </li>
+          <li class="nav-item menu-items">
+            <a class="nav-link" href="{% url 'note_list' %}">
+              <span class="menu-icon">
+                <i class="mdi mdi-note-multiple-outline"></i>
+              </span>
+              <span class="menu-title">Notes</span>
             </a>
           </li>
           <li class="nav-item menu-items">
@@ -202,9 +210,38 @@
             </button>
             <ul class="navbar-nav w-100">
               <li class="nav-item w-100">
+                {% if sidebar_tasks %}
+                <div class="nav-link mt-2 mt-md-0 d-none d-lg-flex sidebar-recent-tasks align-items-center" style="gap:10px;">
+                  <div class="small text-muted">Recent</div>
+                  <div style="flex:1; max-width:520px;">
+                    <ul class="list-unstyled mb-0 d-flex flex-row" style="gap:8px; overflow:auto;">
+                      {% for t in sidebar_tasks %}
+                        <li style="min-width:160px;">
+                          <a href="{% url 'task_detail' t.pk %}" class="d-flex align-items-center text-decoration-none text-light">
+                            <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                              <small class="d-block">{{ t.title }}</small>
+                              <small class="text-muted">{{ t.deadline|date:'M d' }}</small>
+                            </div>
+                            <div style="margin-left:8px;">
+                              {% if t.status == 'Completed' %}
+                                <span class="badge badge-success">✓</span>
+                              {% elif t.status == 'In Progress' %}
+                                <span class="badge badge-warning">…</span>
+                              {% else %}
+                                <span class="badge badge-outline-warning">•</span>
+                              {% endif %}
+                            </div>
+                          </a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+                {% else %}
                 <form class="nav-link mt-2 mt-md-0 d-none d-lg-flex search">
                   <input type="text" class="form-control" placeholder="Search products">
                 </form>
+                {% endif %}
               </li>
             </ul>
             <ul class="navbar-nav navbar-nav-right">

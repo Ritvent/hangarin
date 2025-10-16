@@ -293,7 +293,8 @@ class NoteCreateView(CreateView):
     def get_success_url(self):
         # redirect back to the category tasks view for the created task
         try:
-            return reverse('category_tasks', args=[self.object.category.pk])
+            # Note is linked to a Task which belongs to a Category
+            return reverse('category_tasks', args=[self.object.task.category.pk])
         except Exception:
             return reverse_lazy('dashboard')
         return self.request.path
@@ -303,6 +304,7 @@ class NoteCreateView(CreateView):
         context['form_title'] = 'Add New Note'
         context['form_description'] = 'Add a note to a task'
         context['submit_text'] = 'Add Note'
+        return context
 
     def get_initial(self):
         initial = super().get_initial()
@@ -314,7 +316,6 @@ class NoteCreateView(CreateView):
             except (ValueError, TypeError):
                 pass
         return initial
-        return context
 
 
 class NoteUpdateView(UpdateView):
@@ -338,6 +339,74 @@ class NoteDeleteView(DeleteView):
     template_name = 'note_confirm_delete.html'
     success_url = reverse_lazy('dashboard')
     context_object_name = 'note'
+
+
+class NoteListView(ListView):
+    """List all notes, with optional filtering by task via ?task=<task_pk> and search via ?q="""
+    model = Note
+    template_name = 'notes.html'
+    context_object_name = 'notes'
+
+    def get_queryset(self):
+        qs = Note.objects.select_related('task')
+        # optional filter by task
+        task_pk = self.request.GET.get('task')
+        if task_pk:
+            try:
+                task_pk = int(task_pk)
+                qs = qs.filter(task__pk=task_pk)
+            except (ValueError, TypeError):
+                pass
+
+        # search across note content and related task title
+        q = self.request.GET.get('q')
+        if q:
+            qs = qs.filter(
+                Q(content__icontains=q) |
+                Q(task__title__icontains=q)
+            )
+
+        # support simple ordering via ?sort=created_at|task and dir=asc|desc
+        sort_key = self.request.GET.get('sort', '').strip()
+        sort_dir = self.request.GET.get('dir', 'asc')
+        allowed = {
+            'created_at': 'created_at',
+            'task': 'task__title',
+        }
+        if sort_key in allowed:
+            field = allowed[sort_key]
+            if sort_dir == 'desc':
+                field = '-' + field
+            try:
+                qs = qs.order_by(field)
+            except Exception:
+                pass
+
+        # default ordering newest first
+        if not self.request.GET.get('sort'):
+            qs = qs.order_by('-created_at')
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '')
+        context['current_sort'] = self.request.GET.get('sort', '')
+        context['current_direction'] = self.request.GET.get('dir', 'asc')
+        context.update({
+            'category_name': 'Notes',
+            'category_color': 'info',
+            'category_pk': None,
+            'labels': {
+                'add_task': 'Add Note',
+                'create_first': 'Create Your First Note',
+                'task_col': 'Note',
+                'priority_col': 'Task',
+                'status_col': 'Created',
+                'due_col': 'Created At',
+            }
+        })
+        return context
 
 
 # ========== SUBTASK CRUD VIEWS ==========
@@ -379,6 +448,114 @@ class SubTaskDeleteView(DeleteView):
     template_name = 'subtask_confirm_delete.html'
     success_url = reverse_lazy('dashboard')
     context_object_name = 'subtask'
+
+
+class SubTaskListView(ListView):
+    """List all subtasks, with optional filtering by parent task via ?parent=<task_pk>."""
+    model = SubTask
+    template_name = 'subtasks.html'
+    context_object_name = 'subtasks'
+
+    def get_queryset(self):
+        # SubTask doesn't have its own priority/deadline; use parent task's relations
+        qs = SubTask.objects.select_related('parent_task', 'parent_task__priority')
+        parent = self.request.GET.get('parent')
+        if parent:
+            try:
+                parent_pk = int(parent)
+                qs = qs.filter(parent_task__pk=parent_pk)
+            except (ValueError, TypeError):
+                pass
+        # support filtering by parent task priority via query param ?priority=<pk>
+        priority = self.request.GET.get('priority')
+        if priority:
+            try:
+                priority_pk = int(priority)
+                qs = qs.filter(parent_task__priority__pk=priority_pk)
+            except (ValueError, TypeError):
+                pass
+
+        # support filtering by subtask status via ?status=Completed|In Progress|Pending
+        status = self.request.GET.get('status')
+        if status:
+            qs = qs.filter(status__iexact=status)
+
+        # optional search across subtask title/description
+        q = self.request.GET.get('q')
+        if q:
+            qs = qs.filter(
+                Q(title__icontains=q) |
+                Q(description__icontains=q)
+            )
+
+        # support sorting via ?sort=<key>&dir=asc|desc (same semantic sorts as tasks)
+        sort_key = self.request.GET.get('sort', '').strip()
+        sort_dir = self.request.GET.get('dir', 'asc')
+
+        if sort_key == 'priority':
+            priority_order_case = Case(
+                When(parent_task__priority__priority_name__iexact='critical', then=Value(1)),
+                When(parent_task__priority__priority_name__iexact='high', then=Value(2)),
+                When(parent_task__priority__priority_name__iexact='medium', then=Value(3)),
+                When(parent_task__priority__priority_name__iexact='low', then=Value(4)),
+                When(parent_task__priority__priority_name__iexact='optional', then=Value(5)),
+                default=Value(999),
+                output_field=IntegerField(),
+            )
+            try:
+                qs = qs.annotate(priority_rank=priority_order_case)
+                if sort_dir == 'desc':
+                    qs = qs.order_by('-priority_rank')
+                else:
+                    qs = qs.order_by('priority_rank')
+            except Exception:
+                pass
+        else:
+            allowed_sorts = {
+                'title': 'title',
+                'task': 'title',
+                'status': 'status',
+                'deadline': 'parent_task__deadline',
+                'due': 'parent_task__deadline',
+            }
+            if sort_key in allowed_sorts:
+                order_field = allowed_sorts[sort_key]
+                if sort_dir == 'desc':
+                    order_field = '-' + order_field
+                try:
+                    qs = qs.order_by(order_field)
+                except Exception:
+                    pass
+
+        # default fallback ordering
+        if not self.request.GET.get('sort'):
+            qs = qs.order_by('-updated_at')
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['priorities'] = Priority.objects.all()
+        context['selected_priority'] = self.request.GET.get('priority', '')
+        context.update({
+            'category_name': 'Subtasks',
+            'category_color': 'primary',
+            'category_pk': None,
+            'labels': {
+                'add_task': 'Add Subtask',
+                'create_first': 'Create Your First Subtask',
+                'task_col': 'Subtask',
+                'priority_col': 'Priority',
+                'status_col': 'Status',
+                'due_col': 'Due Date',
+            }
+        })
+        # expose sorting state for the template (so arrows and links work)
+        context['current_sort'] = self.request.GET.get('sort', '')
+        context['current_direction'] = self.request.GET.get('dir', 'asc')
+
+        context['search_query'] = self.request.GET.get('q', '')
+        return context
 
 
  
