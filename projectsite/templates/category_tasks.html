@@ -102,14 +102,23 @@
         <div class="mb-4">
           <!-- Search bar - full width on mobile -->
           <div class="mb-3">
-            <div class="input-group input-group-sm">
-              <input 
-                id="taskSearch" 
-                type="search" 
-                class="form-control form-control-sm text-light bg-dark border-secondary" 
-                placeholder="Search tasks by title or description"
-                aria-label="Search tasks">
-            </div>
+            <form id="searchForm" method="get" action="">
+              <div class="input-group input-group-sm">
+                <input 
+                  id="taskSearch"
+                  name="q"
+                  type="search" 
+                  class="form-control form-control-sm text-light bg-dark border-secondary" 
+                  placeholder="Search tasks by title or description"
+                  value="{{ request.GET.q|default:'' }}"
+                  aria-label="Search tasks">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="submit">
+                    <i class="mdi mdi-magnify"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
           
           <!-- Filters - wrap on mobile -->
@@ -375,11 +384,16 @@
 <script>
   (function(){
     const searchInput = document.getElementById('taskSearch');
+    const searchForm = document.getElementById('searchForm');
+    const searchButton = searchForm ? searchForm.querySelector('button[type="submit"]') : null;
+    
     if (!searchInput) return;
+    
     function norm(s){ return (s||'').toString().toLowerCase().trim(); }
     const tableBody = document.querySelector('table.table tbody');
     const mobileCards = document.querySelectorAll('.task-card');
     let noResultsRow = document.getElementById('noResultsRow');
+    
     if (!noResultsRow && tableBody) {
       noResultsRow = document.createElement('tr');
       noResultsRow.id = 'noResultsRow';
@@ -387,6 +401,7 @@
       noResultsRow.style.display = 'none';
       tableBody.parentNode && tableBody.appendChild(noResultsRow);
     }
+    
     function parseDateYmd(s){
       if (!s) return null;
       const parts = s.split('-');
@@ -394,7 +409,7 @@
       return new Date(parts[0], parts[1]-1, parts[2]);
     }
 
-    function filterOnce(){
+    function filterTasks(){
       const q = norm(searchInput.value);
       const selectedPriority = document.getElementById('priorityFilter') ? document.getElementById('priorityFilter').value : '';
       const selectedStatus = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
@@ -461,13 +476,44 @@
 
       return anyVisible;
     }
+    
+    // Handle form submission (Enter key or button click)
+    if (searchForm) {
+      searchForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        filterTasks();
+        return false;
+      });
+    }
+    
+    // Handle search button click directly
+    if (searchButton) {
+      searchButton.addEventListener('click', function(e){
+        e.preventDefault();
+        filterTasks();
+        return false;
+      });
+    }
+    
+    // Handle Enter key directly on input
+    searchInput.addEventListener('keypress', function(e){
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        e.preventDefault();
+        filterTasks();
+        return false;
+      }
+    });
+    
+    // Handle typing with debounce
     let timer = null;
     searchInput.addEventListener('input', function(){
       clearTimeout(timer);
-      timer = setTimeout(filterOnce, 120);
+      timer = setTimeout(filterTasks, 120);
     });
+    
     document.addEventListener('DOMContentLoaded', function(){
-      filterOnce();
+      filterTasks();
+      
       // wire Order by date toggle button
       const orderBtn = document.getElementById('orderByDateBtn');
       if (orderBtn) {
