@@ -398,11 +398,72 @@ class SubTaskListView(ListView):
                 qs = qs.filter(parent_task__pk=parent_pk)
             except (ValueError, TypeError):
                 pass
-        # optional search
+        # support filtering by parent task priority via query param ?priority=<pk>
+        priority = self.request.GET.get('priority')
+        if priority:
+            try:
+                priority_pk = int(priority)
+                qs = qs.filter(parent_task__priority__pk=priority_pk)
+            except (ValueError, TypeError):
+                pass
+
+        # support filtering by subtask status via ?status=Completed|In Progress|Pending
+        status = self.request.GET.get('status')
+        if status:
+            qs = qs.filter(status__iexact=status)
+
+        # optional search across subtask title/description
         q = self.request.GET.get('q')
         if q:
-            qs = qs.filter(title__icontains=q)
-        return qs.order_by('-updated_at')
+            qs = qs.filter(
+                Q(title__icontains=q) |
+                Q(description__icontains=q)
+            )
+
+        # support sorting via ?sort=<key>&dir=asc|desc (same semantic sorts as tasks)
+        sort_key = self.request.GET.get('sort', '').strip()
+        sort_dir = self.request.GET.get('dir', 'asc')
+
+        if sort_key == 'priority':
+            priority_order_case = Case(
+                When(parent_task__priority__priority_name__iexact='critical', then=Value(1)),
+                When(parent_task__priority__priority_name__iexact='high', then=Value(2)),
+                When(parent_task__priority__priority_name__iexact='medium', then=Value(3)),
+                When(parent_task__priority__priority_name__iexact='low', then=Value(4)),
+                When(parent_task__priority__priority_name__iexact='optional', then=Value(5)),
+                default=Value(999),
+                output_field=IntegerField(),
+            )
+            try:
+                qs = qs.annotate(priority_rank=priority_order_case)
+                if sort_dir == 'desc':
+                    qs = qs.order_by('-priority_rank')
+                else:
+                    qs = qs.order_by('priority_rank')
+            except Exception:
+                pass
+        else:
+            allowed_sorts = {
+                'title': 'title',
+                'task': 'title',
+                'status': 'status',
+                'deadline': 'parent_task__deadline',
+                'due': 'parent_task__deadline',
+            }
+            if sort_key in allowed_sorts:
+                order_field = allowed_sorts[sort_key]
+                if sort_dir == 'desc':
+                    order_field = '-' + order_field
+                try:
+                    qs = qs.order_by(order_field)
+                except Exception:
+                    pass
+
+        # default fallback ordering
+        if not self.request.GET.get('sort'):
+            qs = qs.order_by('-updated_at')
+
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -421,6 +482,10 @@ class SubTaskListView(ListView):
                 'due_col': 'Due Date',
             }
         })
+        # expose sorting state for the template (so arrows and links work)
+        context['current_sort'] = self.request.GET.get('sort', '')
+        context['current_direction'] = self.request.GET.get('dir', 'asc')
+
         context['search_query'] = self.request.GET.get('q', '')
         return context
 

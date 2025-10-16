@@ -150,7 +150,7 @@
               </button>
               <a href="{% url 'subtask_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }} btn-sm">
                 <i class="mdi mdi-plus mr-1"></i>
-                <span class="d-none d-sm-inline">Add Subtask</span>
+                <span class="d-none d-sm-inline">{{ labels.add_task|default:'Add Subtask' }}</span>
                 <span class="d-inline d-sm-none">Add</span>
               </a>
             </div>
@@ -163,11 +163,39 @@
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th>Subtask</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                  <th>Due Date</th>
-                  <th>Actions</th>
+                  {% with req=request.GET %}
+                    {% with cur_sort=current_sort cur_dir=current_direction %}
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=title&amp;dir={% if cur_sort == 'title' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.task_col|default:'Subtask' }}
+                          {% if cur_sort == 'title' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=priority&amp;dir={% if cur_sort == 'priority' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.priority_col|default:'Priority' }}
+                          {% if cur_sort == 'priority' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=status&amp;dir={% if cur_sort == 'status' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.status_col|default:'Status' }}
+                          {% if cur_sort == 'status' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>
+                        <a href="?{% if selected_priority %}priority={{ selected_priority }}&amp;{% endif %}sort=deadline&amp;dir={% if cur_sort == 'deadline' and cur_dir == 'asc' %}desc{% else %}asc{% endif %}">{{ labels.due_col|default:'Due Date' }}
+                          {% if cur_sort == 'deadline' %}
+                            {% if cur_dir == 'asc' %}▲{% else %}▼{% endif %}
+                          {% endif %}
+                        </a>
+                      </th>
+                      <th>Actions</th>
+                    {% endwith %}
+                  {% endwith %}
                 </tr>
               </thead>
               <tbody>
@@ -215,9 +243,9 @@
           <td><span>{% if subtask.parent_task.deadline %}{{ subtask.parent_task.deadline|date:"M d, Y" }}{% endif %}</span></td>
           <td>
             <a href="{% url 'task_detail' subtask.parent_task.pk %}" class="btn btn-outline-info btn-sm mr-1"><i class="mdi mdi-eye"></i></a>
-                      <a href="{% url 'subtask_edit' subtask.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="mdi mdi-pencil"></i></a>
-                      <a href="{% url 'subtask_delete' subtask.pk %}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-delete"></i></a>
-                  </td>
+            <a href="{% url 'subtask_edit' subtask.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="mdi mdi-pencil"></i></a>
+            <a href="{% url 'subtask_delete' subtask.pk %}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-delete"></i></a>
+          </td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -230,7 +258,7 @@
               <h5 class="text-muted">No {{ category_name|lower }} subtasks yet</h5>
               <p class="text-muted mb-4">Start by creating your first {{ category_name|lower }} subtask</p>
               <a href="{% url 'subtask_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }}">
-                <i class="mdi mdi-plus mr-1"></i>Create Your First Subtask
+                <i class="mdi mdi-plus mr-1"></i>{{ labels.create_first|default:'Create Your First Subtask' }}
               </a>
             </div>
           {% endif %}
@@ -298,7 +326,7 @@
             <div class="text-center py-5">
               <h5 class="text-muted">No {{ category_name|lower }} subtasks yet</h5>
               <a href="{% url 'subtask_create' %}?category={{ category_pk }}" class="btn btn-{{ category_color }}">
-                <i class="mdi mdi-plus mr-1"></i> Add Your First Subtask
+                <i class="mdi mdi-plus mr-1"></i>{{ labels.create_first|default:'Add Your First Subtask' }}
               </a>
             </div>
           {% endif %}
