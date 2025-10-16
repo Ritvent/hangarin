@@ -293,7 +293,8 @@ class NoteCreateView(CreateView):
     def get_success_url(self):
         # redirect back to the category tasks view for the created task
         try:
-            return reverse('category_tasks', args=[self.object.category.pk])
+            # Note is linked to a Task which belongs to a Category
+            return reverse('category_tasks', args=[self.object.task.category.pk])
         except Exception:
             return reverse_lazy('dashboard')
         return self.request.path
@@ -303,6 +304,7 @@ class NoteCreateView(CreateView):
         context['form_title'] = 'Add New Note'
         context['form_description'] = 'Add a note to a task'
         context['submit_text'] = 'Add Note'
+        return context
 
     def get_initial(self):
         initial = super().get_initial()
@@ -314,7 +316,6 @@ class NoteCreateView(CreateView):
             except (ValueError, TypeError):
                 pass
         return initial
-        return context
 
 
 class NoteUpdateView(UpdateView):
