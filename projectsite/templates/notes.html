@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category_name }} - Hangarin{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between">
+          <div class="d-flex align-items-center mb-3 mb-md-0">
+            <div class="icon icon-box-info mr-3">
+              <span class="mdi mdi-note-multiple"></span>
+            </div>
+            <div>
+              <h2 class="text-info mb-0"> {{ category_name }} </h2>
+              <p class="text-muted mb-0">Manage your notes and link them to tasks</p>
+            </div>
+          </div>
+          <div class="d-flex align-items-center">
+            <div class="badge border border-info text-info badge-lg mr-3">
+              {{ notes.count }} Note{{ notes.count|pluralize }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-4">
+          <div class="mb-3">
+            <form id="searchForm" method="get" action="">
+              <div class="input-group input-group-sm">
+                <input 
+                  id="taskSearch"
+                  name="q"
+                  type="search" 
+                  class="form-control form-control-sm text-light bg-dark border-secondary" 
+                  placeholder="Search notes or task titles"
+                  value="{{ request.GET.q|default:'' }}"
+                  aria-label="Search notes">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="submit">
+                    <i class="mdi mdi-magnify"></i>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-between">
+            <div class="mb-2 mb-sm-0">
+              <form method="get" class="mr-2 d-flex align-items-center" id="filtersForm">
+                <div class="form-group mb-0 mr-2">
+                  <select id="taskFilter" name="task" onchange="this.form.submit()" class="form-control form-control-sm">
+                    <option value="">All tasks</option>
+                    {% for t in request.user.task_set.all %}
+                      <option value="{{ t.pk }}" {% if request.GET.task == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.title }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </form>
+            </div>
+            <div class="d-flex">
+              <a href="{% url 'note_create' %}" class="btn btn-info btn-sm">
+                <i class="mdi mdi-plus mr-1"></i>
+                <span class="d-none d-sm-inline">{{ labels.add_task|default:'Add Note' }}</span>
+                <span class="d-inline d-sm-none">Add</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive d-none d-md-block">
+          {% if notes %}
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>
+                    <a href="?sort=task&amp;dir={% if current_sort == 'task' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">Task
+                      {% if current_sort == 'task' %}
+                        {% if current_direction == 'asc' %}▲{% else %}▼{% endif %}
+                      {% endif %}
+                    </a>
+                  </th>
+                  <th>Note</th>
+                  <th>
+                    <a href="?sort=created_at&amp;dir={% if current_sort == 'created_at' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">Created
+                      {% if current_sort == 'created_at' %}
+                        {% if current_direction == 'asc' %}▲{% else %}▼{% endif %}
+                      {% endif %}
+                    </a>
+                  </th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for note in notes %}
+                  <tr data-task="{{ note.task.pk }}" data-created="{{ note.created_at|date:'Y-m-d' }}">
+                    <td>
+                      <div>
+                        <h6 class="card-title mb-0">{{ note.task.title }}</h6>
+                        <p class="mb-0 small text-muted">{{ note.task.description|truncatechars:50 }}</p>
+                      </div>
+                    </td>
+                    <td>
+                      <p class="mb-0">{{ note.content|truncatechars:120 }}</p>
+                    </td>
+                    <td><span>{{ note.created_at|date:"M d, Y H:i" }}</span></td>
+                    <td>
+                      <a href="{% url 'task_detail' note.task.pk %}" class="btn btn-outline-info btn-sm mr-1"><i class="mdi mdi-eye"></i></a>
+                      <a href="{% url 'note_edit' note.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="mdi mdi-pencil"></i></a>
+                      <a href="{% url 'note_delete' note.pk %}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-delete"></i></a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div class="text-center py-5">
+              <div class="icon icon-box-info mx-auto mb-3" style="width: 80px; height: 80px;">
+                <span class="mdi mdi-note-multiple icon-item" style="font-size: 40px;"></span>
+              </div>
+              <h5 class="text-muted">No notes yet</h5>
+              <p class="text-muted mb-4">Add your first note to a task</p>
+              <a href="{% url 'note_create' %}" class="btn btn-info">
+                <i class="mdi mdi-plus mr-1"></i>Add Note
+              </a>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="d-block d-md-none mt-4">
+          {% if notes %}
+            <div class="row" id="taskContainer">
+              {% for note in notes %}
+                <div class="col-12 mb-3 note-card" data-task="{{ note.task.pk }}" data-created="{{ note.created_at|date:'Y-m-d' }}">
+                  <div class="card bg-dark text-light border border-mobile-info">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0 flex-grow-1 mr-2">{{ note.task.title }}</h6>
+                        <div class="d-flex flex-wrap justify-content-end" style="gap: 4px;">
+                          <span class="badge badge-outline-info">{{ note.created_at|date:'M d, Y' }}</span>
+                        </div>
+                      </div>
+                      <p class="small text-muted mb-2">{{ note.content|truncatechars:140 }}</p>
+                      <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div>
+                          <a href="{% url 'task_detail' note.task.pk %}" class="btn btn-outline-info btn-sm mr-1"><i class="mdi mdi-eye"></i></a>
+                          <a href="{% url 'note_edit' note.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="mdi mdi-pencil"></i></a>
+                          <a href="{% url 'note_delete' note.pk %}" class="btn btn-outline-danger btn-sm"><i class="mdi mdi-delete"></i></a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <h5 class="text-muted">No notes yet</h5>
+              <a href="{% url 'note_create' %}" class="btn btn-info">
+                <i class="mdi mdi-plus mr-1"></i> Add Your First Note
+              </a>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_scripts %}
+<style>
+  @media (max-width: 767px) {
+    .border-mobile-info { border-color: #17a2b8 !important; }
+    .note-card .card { border-width: 2px !important; }
+  }
+  @media (max-width: 575px) {
+    #filtersForm { flex-direction: column !important; gap: 6px; }
+    #filtersForm .form-group { width: 100% !important; }
+  }
+</style>
+
+<script>
+(function(){
+  const searchInput = document.getElementById('taskSearch');
+  const searchForm = document.getElementById('searchForm');
+  const searchButton = searchForm ? searchForm.querySelector('button[type="submit"]') : null;
+  if (!searchInput) return;
+  function norm(s){ return (s||'').toString().toLowerCase().trim(); }
+  const tableBody = document.querySelector('table.table tbody');
+  const mobileCards = document.querySelectorAll('.note-card');
+  let noResultsRow = document.getElementById('noResultsRow');
+  if (!noResultsRow && tableBody) {
+    noResultsRow = document.createElement('tr');
+    noResultsRow.id = 'noResultsRow';
+    noResultsRow.innerHTML = '<td colspan="4" class="text-center text-muted py-4">No notes match your search.</td>';
+    noResultsRow.style.display = 'none';
+    tableBody.parentNode && tableBody.appendChild(noResultsRow);
+  }
+  function parseDateYmd(s){ if (!s) return null; const parts = s.split('-'); if (parts.length !== 3) return null; return new Date(parts[0], parts[1]-1, parts[2]); }
+  function filterNotes(){
+    const q = norm(searchInput.value);
+    const selectedTask = document.getElementById('taskFilter') ? document.getElementById('taskFilter').value : '';
+    let anyVisible = false;
+    function matchesFilters(elTask, elContent){
+      const text = (norm(elTask) + ' ' + norm(elContent)).trim();
+      if (q !== '' && text.indexOf(q) === -1) return false;
+      if (selectedTask && selectedTask !== '' && String(elTask) !== String(selectedTask)) return false;
+      return true;
+    }
+    if (tableBody) {
+      Array.from(tableBody.querySelectorAll('tr')).forEach(function(row){
+        if (row.id === 'noResultsRow') return;
+        const task = row.getAttribute('data-task') || '';
+        const content = row.querySelector('td:nth-child(2)') ? row.querySelector('td:nth-child(2)').textContent : '';
+        const match = matchesFilters(task, content);
+        row.style.display = match ? '' : 'none';
+        if (match) anyVisible = true;
+      });
+      if (noResultsRow) noResultsRow.style.display = anyVisible ? 'none' : '';
+    }
+    if (mobileCards && mobileCards.length) {
+      let anyCardVisible = false;
+      mobileCards.forEach(function(card){
+        const task = card.getAttribute('data-task') || '';
+        const content = card.querySelector('p') ? card.querySelector('p').textContent : '';
+        const match = matchesFilters(task, content);
+        card.style.display = match ? '' : 'none';
+        if (match) anyCardVisible = true;
+      });
+      anyVisible = anyVisible || anyCardVisible;
+    }
+    return anyVisible;
+  }
+  if (searchForm) {
+    searchForm.addEventListener('submit', function(e){ e.preventDefault(); filterNotes(); return false; });
+  }
+  if (searchButton) {
+    searchButton.addEventListener('click', function(e){ e.preventDefault(); filterNotes(); return false; });
+  }
+  searchInput.addEventListener('keypress', function(e){ if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); filterNotes(); return false; } });
+  let timer = null; searchInput.addEventListener('input', function(){ clearTimeout(timer); timer = setTimeout(filterNotes, 120); });
+  document.addEventListener('DOMContentLoaded', function(){ filterNotes(); });
+})();
+</script>
+{% endblock extra_scripts %}

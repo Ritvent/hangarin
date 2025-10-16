@@ -341,6 +341,74 @@ class NoteDeleteView(DeleteView):
     context_object_name = 'note'
 
 
+class NoteListView(ListView):
+    """List all notes, with optional filtering by task via ?task=<task_pk> and search via ?q="""
+    model = Note
+    template_name = 'notes.html'
+    context_object_name = 'notes'
+
+    def get_queryset(self):
+        qs = Note.objects.select_related('task')
+        # optional filter by task
+        task_pk = self.request.GET.get('task')
+        if task_pk:
+            try:
+                task_pk = int(task_pk)
+                qs = qs.filter(task__pk=task_pk)
+            except (ValueError, TypeError):
+                pass
+
+        # search across note content and related task title
+        q = self.request.GET.get('q')
+        if q:
+            qs = qs.filter(
+                Q(content__icontains=q) |
+                Q(task__title__icontains=q)
+            )
+
+        # support simple ordering via ?sort=created_at|task and dir=asc|desc
+        sort_key = self.request.GET.get('sort', '').strip()
+        sort_dir = self.request.GET.get('dir', 'asc')
+        allowed = {
+            'created_at': 'created_at',
+            'task': 'task__title',
+        }
+        if sort_key in allowed:
+            field = allowed[sort_key]
+            if sort_dir == 'desc':
+                field = '-' + field
+            try:
+                qs = qs.order_by(field)
+            except Exception:
+                pass
+
+        # default ordering newest first
+        if not self.request.GET.get('sort'):
+            qs = qs.order_by('-created_at')
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '')
+        context['current_sort'] = self.request.GET.get('sort', '')
+        context['current_direction'] = self.request.GET.get('dir', 'asc')
+        context.update({
+            'category_name': 'Notes',
+            'category_color': 'info',
+            'category_pk': None,
+            'labels': {
+                'add_task': 'Add Note',
+                'create_first': 'Create Your First Note',
+                'task_col': 'Note',
+                'priority_col': 'Task',
+                'status_col': 'Created',
+                'due_col': 'Created At',
+            }
+        })
+        return context
+
+
 # ========== SUBTASK CRUD VIEWS ==========
 
 class SubTaskCreateView(CreateView):
