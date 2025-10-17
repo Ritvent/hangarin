@@ -409,7 +409,10 @@
                       </div>
                     </div>
                     <div class="preview-item-content">
-                      <p class="preview-subject mb-1">Log out</p>
+                      <form method="post" action="{% url 'account_logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link p-0 preview-subject mb-1 text-light" style="text-decoration:none;">Log out</button>
+                      </form>
                     </div>
                   </a>
                   <div class="dropdown-divider"></div>

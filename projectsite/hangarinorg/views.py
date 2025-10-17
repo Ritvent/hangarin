@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.db.models import Q, Case, When, IntegerField, Value, Count, F, FloatField, ExpressionWrapper
 from django.db.models.functions import Coalesce, Cast
 from django.shortcuts import redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 logger = logging.getLogger(__name__)
@@ -88,11 +89,14 @@ def deploy(request):
 def root_redirect(request):
     return redirect('dashboard')
 
-class HomePageView(ListView):
+class HomePageView(LoginRequiredMixin, ListView):
     model = Task
     template_name = 'dashboard.html'
     context_object_name = 'tasks'
     
+    login_url = '/accounts/login/'
+    redirect_field_name = 'next'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
