@@ -15,7 +15,7 @@ from hangarinorg.models import Task, Category, Priority, Note, SubTask
 from hangarinorg.forms import TaskForm, CategoryForm, PriorityForm, NoteForm, SubTaskForm
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
-from django.db.models import Case, When, IntegerField, Value, Count, F, FloatField, ExpressionWrapper
+from django.db.models import Q, Case, When, IntegerField, Value, Count, F, FloatField, ExpressionWrapper
 from django.db.models.functions import Coalesce, Cast
 from django.shortcuts import redirect
 
@@ -219,6 +219,14 @@ class HomePageView(ListView):
         else:
             context['primary_col'] = ''
             context['primary_dir'] = 'asc'
+
+        # compute overdue tasks: deadline before today and progress less than 100
+        try:
+            today = timezone.now().date()
+            overdue_count = tasks_qs.exclude(deadline__isnull=True).filter(deadline__lt=today).exclude(progress_int=100).count()
+        except Exception:
+            overdue_count = 0
+        context['overdue'] = overdue_count
 
         # Build list expected by template: [{'task': TaskInstance, 'progress': int}, ...]
         task_rows = [{'task': t, 'progress': getattr(t, 'progress_int', 0)} for t in tasks_qs]
