@@ -1,0 +1,31 @@
+.social-icon-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 4px;
+  text-decoration: none;
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms cubic-bezier(.2,.8,.2,1), opacity 180ms cubic-bezier(.2,.8,.2,1);
+}
+.social-icon-btn img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.social-icon-btn--github {
+  background: #24292e;
+  border: 1px solid #24292e;
+  color: #fff;
+}
+.social-icon-btn--google {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+}
+.social-icon-btn:focus,
+.social-icon-btn:hover {
+  opacity: 0.95;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.03);
+}

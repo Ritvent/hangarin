@@ -1,0 +1,43 @@
+/* Tasteful global hover effects for interactive elements */
+:root{
+  --hover-ease: cubic-bezier(.2,.8,.2,1);
+}
+
+/* Buttons: subtle lift and shadow */
+.btn, .social-icon-btn, .create-new-button, .menu-items .nav-link {
+  transition: transform 180ms var(--hover-ease), box-shadow 180ms var(--hover-ease), opacity 180ms var(--hover-ease);
+  will-change: transform, box-shadow, opacity;
+}
+.btn:hover, .social-icon-btn:hover, .create-new-button:hover, .menu-items .nav-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(20,20,30,0.08);
+  opacity: 0.98;
+}
+
+/* Cards: slight raise on hover */
+.card {
+  transition: transform 200ms var(--hover-ease), box-shadow 200ms var(--hover-ease);
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 40px rgba(16,24,40,0.06);
+}
+
+/* Table rows: highlight on hover for desktop */
+@media (min-width: 992px) {
+  table tbody tr {
+    transition: background-color 150ms var(--hover-ease), transform 150ms var(--hover-ease);
+  }
+  table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+    transform: translateY(-1px);
+  }
+}
+
+/* Sidebar links: subtle background reveal */
+.sidebar .nav-link {
+  transition: background-color 160ms var(--hover-ease), color 160ms var(--hover-ease);
+}
+.sidebar .nav-link:hover {
+  background-color: rgba(0,0,0,0.03);
+}
