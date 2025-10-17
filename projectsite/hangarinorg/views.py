@@ -112,6 +112,19 @@ class HomePageView(ListView):
             qs = all_tasks.filter(category=cat)
             category_groups.append({'category': cat, 'tasks': qs})
         context['category_task_groups'] = category_groups
+
+        # Build task rows with progress computed from subtasks
+        task_rows = []
+        for t in Task.objects.all():
+            total_sub = t.subtasks.count()
+            completed_sub = t.subtasks.filter(status__iexact='Completed').count()
+            if total_sub > 0:
+                progress = int((completed_sub / total_sub) * 100)
+            else:
+                # If no subtasks, consider task status as progress indicator
+                progress = 100 if t.status == 'Completed' else 0
+            task_rows.append({'task': t, 'progress': progress})
+        context['task_rows'] = task_rows
         
         return context
 
