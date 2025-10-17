@@ -32,7 +32,7 @@
                 <div class="d-flex align-items-center">
                   <i class="mdi mdi-clipboard-list display-4 mr-3"></i>
                   <div>
-                    <h4 class="mb-0">{{ tasks.count }}</h4>
+                    <h4 class="mb-0">{{ total_tasks }}</h4>
                     <p class="mb-0">Total Tasks</p>
                   </div>
                 </div>
@@ -45,7 +45,7 @@
                 <div class="d-flex align-items-center">
                   <i class="mdi mdi-check-circle display-4 mr-3"></i>
                   <div>
-                    <h4 class="mb-0">{{ tasks|length|add:"-1"|add:"1" }}</h4>
+                    <h4 class="mb-0">{{ completed_tasks }}</h4>
                     <p class="mb-0">Completed</p>
                   </div>
                 </div>
@@ -58,7 +58,7 @@
                 <div class="d-flex align-items-center">
                   <i class="mdi mdi-clock display-4 mr-3"></i>
                   <div>
-                    <h4 class="mb-0">{{ tasks|length|add:"-1"|add:"1" }}</h4>
+                    <h4 class="mb-0">{{ in_progress_tasks }}</h4>
                     <p class="mb-0">In Progress</p>
                   </div>
                 </div>

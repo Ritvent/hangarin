@@ -15,7 +15,8 @@ from hangarinorg.models import Task, Category, Priority, Note, SubTask
 from hangarinorg.forms import TaskForm, CategoryForm, PriorityForm, NoteForm, SubTaskForm
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
-from django.db.models import Case, When, IntegerField, Value
+from django.db.models import Q, Case, When, IntegerField, Value, Count, F, FloatField, ExpressionWrapper
+from django.db.models.functions import Coalesce, Cast
 from django.shortcuts import redirect
 
 
@@ -112,6 +113,124 @@ class HomePageView(ListView):
             qs = all_tasks.filter(category=cat)
             category_groups.append({'category': cat, 'tasks': qs})
         context['category_task_groups'] = category_groups
+
+        # Build task rows with progress computed from subtasks using annotations to avoid N+1 queries
+        tasks_qs = (
+            Task.objects
+            .annotate(
+                total_sub=Count('subtasks', distinct=True),
+                completed_sub=Count('subtasks', filter=Q(subtasks__status__iexact='Completed'), distinct=True),
+            )
+            .annotate(
+                # compute percent when there are subtasks: (completed_sub / total_sub) * 100
+                progress_calc=Case(
+                    When(total_sub__gt=0, then=ExpressionWrapper(100.0 * F('completed_sub') / F('total_sub'), output_field=FloatField())),
+                    default=None,
+                    output_field=FloatField(),
+                ),
+                # fallback mapping when no subtasks
+                fallback_pct=Case(
+                    When(status__iexact='Completed', then=Value(100)),
+                    When(status__iexact='In Progress', then=Value(50)),
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+            )
+            .annotate(
+                progress_int=Cast(Coalesce(F('progress_calc'), F('fallback_pct')), IntegerField())
+            )
+        )
+
+        # support chainable ordering via ?order=<col>[,<col2>,...] where each col may be prefixed with - for desc
+        # allowed keys: task, category, progress, deadline
+        order_param = self.request.GET.get('order', '').strip()
+        sort_key = self.request.GET.get('sort', '').strip()  # kept for backward compatibility / arrows
+        sort_dir = self.request.GET.get('dir', 'asc')
+        allowed_sorts = {
+            'task': 'title',
+            'category': 'category__category_name',
+            'progress': 'progress_int',
+            'deadline': 'deadline',
+        }
+
+        # Parse the requested order list (either from order= or fallback to sort/dir + secondary)
+        order_items = []
+        if order_param:
+            raw = [p.strip() for p in order_param.split(',') if p.strip()]
+            order_items = raw
+        else:
+            # fallback: build from sort & optional secondary_sort/secondary_dir params (older logic)
+            primary = self.request.GET.get('sort', '').strip()
+            primary_dir = self.request.GET.get('dir', 'asc')
+            secondary = self.request.GET.get('secondary_sort', '').strip()
+            secondary_dir = self.request.GET.get('secondary_dir', 'asc')
+            if primary:
+                prefix = '-' if primary_dir == 'desc' else ''
+                order_items.append(prefix + primary)
+            if secondary:
+                sprefix = '-' if secondary_dir == 'desc' else ''
+                order_items.append(sprefix + secondary)
+
+        # convert order_items (keys) into ORM order_by fields, preserving sign
+        order_by_fields = []
+        for it in order_items:
+            if not it:
+                continue
+            sign = '-' if it.startswith('-') else ''
+            key = it.lstrip('-')
+            if key in allowed_sorts:
+                order_field = sign + allowed_sorts[key]
+                order_by_fields.append(order_field)
+
+        if order_by_fields:
+            try:
+                tasks_qs = tasks_qs.order_by(*order_by_fields)
+            except Exception:
+                # ignore invalid ordering inputs
+                pass
+
+        # expose current ordering for template use
+        context['current_sort'] = sort_key or (order_items[0].lstrip('-') if order_items else '')
+        context['current_direction'] = sort_dir if sort_key else ( 'desc' if order_items and order_items[0].startswith('-') else 'asc')
+        context['current_order_items'] = order_items
+
+        # build header links: clicking a header makes it the primary key and appends existing order items as tiebreakers
+        header_links = {}
+        for col in allowed_sorts.keys():
+            # determine toggle direction for this column
+            cur_primary = order_items[0].lstrip('-') if order_items else ''
+            cur_primary_dir = 'desc' if order_items and order_items[0].startswith('-') else 'asc'
+            # if clicking the same primary, toggle; otherwise default to asc
+            if cur_primary == col:
+                new_dir = 'desc' if cur_primary_dir == 'asc' else 'asc'
+            else:
+                new_dir = 'asc'
+            new_item = ('' if new_dir == 'asc' else '-') + col
+            # build new order list with new primary followed by existing items that are not the same column
+            new_order = [new_item] + [it for it in order_items if it.lstrip('-') != col]
+            header_links[col] = '?order=' + ','.join(new_order)
+
+        context['header_links'] = header_links
+        # expose the primary ordering column and direction for template arrow rendering
+        if order_items:
+            primary = order_items[0]
+            context['primary_col'] = primary.lstrip('-')
+            context['primary_dir'] = 'desc' if primary.startswith('-') else 'asc'
+        else:
+            context['primary_col'] = ''
+            context['primary_dir'] = 'asc'
+
+        # compute overdue tasks: deadline before today and progress less than 100
+        try:
+            today = timezone.now().date()
+            overdue_count = tasks_qs.exclude(deadline__isnull=True).filter(deadline__lt=today).exclude(progress_int=100).count()
+        except Exception:
+            overdue_count = 0
+        context['overdue'] = overdue_count
+
+        # Build list expected by template: [{'task': TaskInstance, 'progress': int}, ...]
+        task_rows = [{'task': t, 'progress': getattr(t, 'progress_int', 0)} for t in tasks_qs]
+        context['task_rows'] = task_rows
         
         return context
 
@@ -191,7 +310,23 @@ class CategoryDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tasks'] = Task.objects.filter(category=self.object)
+        qs = Task.objects.filter(category=self.object)
+        context['tasks'] = qs
+        # compute stats for the category
+        today = timezone.now().date()
+        total = qs.count()
+        completed = qs.filter(status__iexact='Completed').count()
+        pending = qs.filter(status__iexact='Pending').count()
+        in_progress = qs.filter(status__iexact='In Progress').count()
+        overdue = qs.exclude(deadline__isnull=True).filter(deadline__lt=today).exclude(status__iexact='Completed').count()
+
+        context.update({
+            'total_tasks': total,
+            'completed_tasks': completed,
+            'pending_tasks': pending,
+            'in_progress_tasks': in_progress,
+            'overdue_tasks': overdue,
+        })
         return context
 
 
@@ -550,6 +685,21 @@ class SubTaskListView(ListView):
                 'due_col': 'Due Date',
             }
         })
+        # compute basic stats for the subtasks listing
+        qs = self.get_queryset()
+        today = timezone.now().date()
+        total = qs.count()
+        completed = qs.filter(status__iexact='Completed').count()
+        pending = qs.filter(status__iexact='Pending').count()
+        in_progress = qs.filter(status__iexact='In Progress').count()
+        overdue = qs.exclude(parent_task__deadline__isnull=True).filter(parent_task__deadline__lt=today).exclude(status__iexact='Completed').count()
+        context.update({
+            'total_subtasks': total,
+            'completed_subtasks': completed,
+            'pending_subtasks': pending,
+            'in_progress_subtasks': in_progress,
+            'overdue_subtasks': overdue,
+        })
         # expose sorting state for the template (so arrows and links work)
         context['current_sort'] = self.request.GET.get('sort', '')
         context['current_direction'] = self.request.GET.get('dir', 'asc')
@@ -690,3 +840,6 @@ class CategoryTasksView(ListView):
         context['search_query'] = self.request.GET.get('q', '')
 
         return context
+
+
+        
