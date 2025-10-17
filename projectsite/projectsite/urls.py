@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', root_redirect),
     path('', include('pwa.urls')),
+    path("accounts/", include("allauth.urls")), # allauth routes
     path('dashboard/', views.HomePageView.as_view(), name='dashboard'),
     path("deploy/", views.deploy, name="deploy"),
     # ========== GENERAL TASK URLS ==========
