@@ -38,7 +38,7 @@ def deploy(request):
 
     try:
         # 1. Fetch latest version
-        subprocess.run(["git", "fetch"], cwd=project_dir, check=True)
+        subprocess.run(["git", "fetch", "origin", "main"], cwd=project_dir, check=True)
         diff = subprocess.run(
             ["git", "diff", "--name-only", "origin/main"],
             cwd=project_dir,
