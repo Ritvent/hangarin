@@ -75,6 +75,26 @@
               </a>
             </div>
           </div>
+          
+          <!-- Sort controls for Notes: keep q and task filters when toggling -->
+          <div class="mt-2 mb-3">
+            <div class="d-flex align-items-center flex-wrap">
+              <span class="text-muted mr-2">Sort by:</span>
+              <a class="btn btn-sm btn-outline-secondary mr-2" href="?{% if request.GET.q %}q={{ request.GET.q }}&amp;{% endif %}{% if request.GET.task %}task={{ request.GET.task }}&amp;{% endif %}sort=created_at&amp;dir={% if current_sort == 'created_at' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">
+                Date Created
+                {% if current_sort == 'created_at' %}
+                  {% if current_direction == 'asc' %} ▲ {% else %} ▼ {% endif %}
+                {% endif %}
+              </a>
+
+              <a class="btn btn-sm btn-outline-secondary" href="?{% if request.GET.q %}q={{ request.GET.q }}&amp;{% endif %}{% if request.GET.task %}task={{ request.GET.task }}&amp;{% endif %}sort=task&amp;dir={% if current_sort == 'task' and current_direction == 'asc' %}desc{% else %}asc{% endif %}">
+                Task
+                {% if current_sort == 'task' %}
+                  {% if current_direction == 'asc' %} ▲ {% else %} ▼ {% endif %}
+                {% endif %}
+              </a>
+            </div>
+          </div>
         </div>
 
         <!-- Desktop Box View -->
