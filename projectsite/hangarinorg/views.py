@@ -310,7 +310,23 @@ class CategoryDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['tasks'] = Task.objects.filter(category=self.object)
+        qs = Task.objects.filter(category=self.object)
+        context['tasks'] = qs
+        # compute stats for the category
+        today = timezone.now().date()
+        total = qs.count()
+        completed = qs.filter(status__iexact='Completed').count()
+        pending = qs.filter(status__iexact='Pending').count()
+        in_progress = qs.filter(status__iexact='In Progress').count()
+        overdue = qs.exclude(deadline__isnull=True).filter(deadline__lt=today).exclude(status__iexact='Completed').count()
+
+        context.update({
+            'total_tasks': total,
+            'completed_tasks': completed,
+            'pending_tasks': pending,
+            'in_progress_tasks': in_progress,
+            'overdue_tasks': overdue,
+        })
         return context
 
 
@@ -668,6 +684,21 @@ class SubTaskListView(ListView):
                 'status_col': 'Status',
                 'due_col': 'Due Date',
             }
+        })
+        # compute basic stats for the subtasks listing
+        qs = self.get_queryset()
+        today = timezone.now().date()
+        total = qs.count()
+        completed = qs.filter(status__iexact='Completed').count()
+        pending = qs.filter(status__iexact='Pending').count()
+        in_progress = qs.filter(status__iexact='In Progress').count()
+        overdue = qs.exclude(parent_task__deadline__isnull=True).filter(parent_task__deadline__lt=today).exclude(status__iexact='Completed').count()
+        context.update({
+            'total_subtasks': total,
+            'completed_subtasks': completed,
+            'pending_subtasks': pending,
+            'in_progress_subtasks': in_progress,
+            'overdue_subtasks': overdue,
         })
         # expose sorting state for the template (so arrows and links work)
         context['current_sort'] = self.request.GET.get('sort', '')
