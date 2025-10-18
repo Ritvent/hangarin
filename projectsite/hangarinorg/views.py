@@ -564,6 +564,10 @@ class NoteListView(ListView):
         context['search_query'] = self.request.GET.get('q', '')
         context['current_sort'] = self.request.GET.get('sort', '')
         context['current_direction'] = self.request.GET.get('dir', 'asc')
+        # Provide a curated task list for the filter dropdown (recent or all)
+        # For simplicity, include all tasks ordered by -updated_at
+        context['tasks_for_filter'] = Task.objects.all().order_by('-updated_at')[:200]
+        context['selected_task_pk'] = self.request.GET.get('task', '')
         context.update({
             'category_name': 'Notes',
             'category_color': 'info',
