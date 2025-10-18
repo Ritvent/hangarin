@@ -108,6 +108,10 @@ class HomePageView(LoginRequiredMixin, ListView):
         selected_category = self.request.GET.get('category', '')
         context['selected_category'] = selected_category
         
+        # Get search query from URL parameter
+        search_query = self.request.GET.get('q', '').strip()
+        context['search_query'] = search_query
+        
         # Base queryset for all tasks
         all_tasks = Task.objects.all()
         
@@ -118,6 +122,13 @@ class HomePageView(LoginRequiredMixin, ListView):
                 all_tasks = all_tasks.filter(category__pk=category_pk)
             except (ValueError, TypeError):
                 pass
+        
+        # Filter by search query if provided
+        if search_query:
+            all_tasks = all_tasks.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
         
         # Add task statistics (based on filtered tasks)
         context['total_tasks'] = all_tasks.count()
@@ -213,7 +224,7 @@ class HomePageView(LoginRequiredMixin, ListView):
         context['current_order_items'] = order_items
 
         # build header links: clicking a header makes it the primary key and appends existing order items as tiebreakers
-        # UPDATED: preserve category filter in sorting links
+        # UPDATED: preserve category filter and search query in sorting links
         header_links = {}
         for col in allowed_sorts.keys():
             # determine toggle direction for this column
@@ -231,6 +242,9 @@ class HomePageView(LoginRequiredMixin, ListView):
             # preserve category filter
             if selected_category:
                 link += f'&category={selected_category}'
+            # preserve search query
+            if search_query:
+                link += f'&q={search_query}'
             header_links[col] = link
 
         context['header_links'] = header_links

@@ -95,34 +95,67 @@
   <div class="col-lg-12 grid-margin stretch-card">
     <div class="card">
       <div class="card-body">
-        <h4 class="card-title">Recent Tasks</h4>
+        <h4 class="card-title">All Tasks</h4>
         <p class="card-description">Overview of your tasks and their progress</p>
+        
+        <!-- Search Bar -->
+        <div class="mb-3">
+          <form id="searchForm" method="get" action="">
+            <!-- Preserve category filter in search -->
+            {% if selected_category %}
+              <input type="hidden" name="category" value="{{ selected_category }}">
+            {% endif %}
+            <!-- Preserve sort parameters in search -->
+            {% if request.GET.sort %}
+              <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+            {% endif %}
+            {% if request.GET.dir %}
+              <input type="hidden" name="dir" value="{{ request.GET.dir }}">
+            {% endif %}
+            
+            <div class="input-group input-group-sm">
+              <input 
+                id="taskSearch"
+                name="q"
+                type="search" 
+                class="form-control form-control-sm text-light bg-dark border-secondary" 
+                placeholder="Search tasks by title or description"
+                value="{{ search_query|default:'' }}"
+                aria-label="Search tasks">
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit">
+                  <i class="mdi mdi-magnify"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
         
         <!-- Mobile Sort Buttons -->
         <div class="d-block d-md-none mb-3">
           <div class="btn-group btn-group-sm w-100" role="group">
-            <a href="?sort=task&dir={% if primary_col == 'task' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" 
+            <a href="?sort=task&dir={% if primary_col == 'task' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
                class="btn btn-outline-secondary {% if primary_col == 'task' %}active{% endif %}">
               Task 
               {% if primary_col == 'task' %}
                 {% if primary_dir == 'asc' %}▲{% else %}▼{% endif %}
               {% endif %}
             </a>
-            <a href="?sort=category&dir={% if primary_col == 'category' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" 
+            <a href="?sort=category&dir={% if primary_col == 'category' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
                class="btn btn-outline-secondary {% if primary_col == 'category' %}active{% endif %}">
               Category 
               {% if primary_col == 'category' %}
                 {% if primary_dir == 'asc' %}▲{% else %}▼{% endif %}
               {% endif %}
             </a>
-            <a href="?sort=progress&dir={% if primary_col == 'progress' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" 
+            <a href="?sort=progress&dir={% if primary_col == 'progress' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
                class="btn btn-outline-secondary {% if primary_col == 'progress' %}active{% endif %}">
               Progress 
               {% if primary_col == 'progress' %}
                 {% if primary_dir == 'asc' %}▲{% else %}▼{% endif %}
               {% endif %}
             </a>
-            <a href="?sort=deadline&dir={% if primary_col == 'deadline' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" 
+            <a href="?sort=deadline&dir={% if primary_col == 'deadline' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
                class="btn btn-outline-secondary {% if primary_col == 'deadline' %}active{% endif %}">
               Deadline 
               {% if primary_col == 'deadline' %}
@@ -138,7 +171,7 @@
             <thead>
               <tr>
                 <th style="width: 40%">
-                  <a href="?sort=task&dir={% if primary_col == 'task' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="text-decoration-none">
+                  <a href="?sort=task&dir={% if primary_col == 'task' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
                     Task
                     {% if primary_col == 'task' %}
                       {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
@@ -146,7 +179,7 @@
                   </a>
                 </th>
                 <th style="width: 20%">
-                  <a href="?sort=category&dir={% if primary_col == 'category' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="text-decoration-none">
+                  <a href="?sort=category&dir={% if primary_col == 'category' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
                     Category
                     {% if primary_col == 'category' %}
                       {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
@@ -154,7 +187,7 @@
                   </a>
                 </th>
                 <th style="width: 25%">
-                  <a href="?sort=progress&dir={% if primary_col == 'progress' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="text-decoration-none">
+                  <a href="?sort=progress&dir={% if primary_col == 'progress' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
                     Progress
                     {% if primary_col == 'progress' %}
                       {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
@@ -162,7 +195,7 @@
                   </a>
                 </th>
                 <th style="width: 15%">
-                  <a href="?sort=deadline&dir={% if primary_col == 'deadline' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="text-decoration-none">
+                  <a href="?sort=deadline&dir={% if primary_col == 'deadline' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
                     Deadline
                     {% if primary_col == 'deadline' %}
                       {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
