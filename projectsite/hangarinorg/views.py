@@ -104,8 +104,22 @@ class HomePageView(LoginRequiredMixin, ListView):
         context['categories'] = Category.objects.all()
         context['priorities'] = Priority.objects.all()
         
-        # Add task statistics
+        # Get selected category from URL parameter
+        selected_category = self.request.GET.get('category', '')
+        context['selected_category'] = selected_category
+        
+        # Base queryset for all tasks
         all_tasks = Task.objects.all()
+        
+        # Filter by category if selected
+        if selected_category:
+            try:
+                category_pk = int(selected_category)
+                all_tasks = all_tasks.filter(category__pk=category_pk)
+            except (ValueError, TypeError):
+                pass
+        
+        # Add task statistics (based on filtered tasks)
         context['total_tasks'] = all_tasks.count()
         context['completed_tasks'] = all_tasks.filter(status='Completed').count()
         context['pending_tasks'] = all_tasks.filter(status='Pending').count()
@@ -120,7 +134,7 @@ class HomePageView(LoginRequiredMixin, ListView):
 
         # Build task rows with progress computed from subtasks using annotations to avoid N+1 queries
         tasks_qs = (
-            Task.objects
+            all_tasks
             .annotate(
                 total_sub=Count('subtasks', distinct=True),
                 completed_sub=Count('subtasks', filter=Q(subtasks__status__iexact='Completed'), distinct=True),
@@ -199,6 +213,7 @@ class HomePageView(LoginRequiredMixin, ListView):
         context['current_order_items'] = order_items
 
         # build header links: clicking a header makes it the primary key and appends existing order items as tiebreakers
+        # UPDATED: preserve category filter in sorting links
         header_links = {}
         for col in allowed_sorts.keys():
             # determine toggle direction for this column
@@ -212,7 +227,11 @@ class HomePageView(LoginRequiredMixin, ListView):
             new_item = ('' if new_dir == 'asc' else '-') + col
             # build new order list with new primary followed by existing items that are not the same column
             new_order = [new_item] + [it for it in order_items if it.lstrip('-') != col]
-            header_links[col] = '?order=' + ','.join(new_order)
+            link = '?order=' + ','.join(new_order)
+            # preserve category filter
+            if selected_category:
+                link += f'&category={selected_category}'
+            header_links[col] = link
 
         context['header_links'] = header_links
         # expose the primary ordering column and direction for template arrow rendering
@@ -242,7 +261,6 @@ class TaskListView(ListView):
     model = Task
     template_name = 'dashboard.html'
     context_object_name = 'tasks'
-
 
 
 # Category-specific views
