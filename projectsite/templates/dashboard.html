@@ -134,36 +134,25 @@
         <!-- Mobile Sort Buttons -->
         <div class="d-block d-md-none mb-3">
           <div class="btn-group btn-group-sm w-100" role="group">
-            <a href="?sort=task&dir={% if primary_col == 'task' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
-               class="btn btn-outline-secondary {% if primary_col == 'task' %}active{% endif %}">
-              Task 
-              {% if primary_col == 'task' %}
-                {% if primary_dir == 'asc' %}▲{% else %}▼{% endif %}
-              {% endif %}
+            <a href="{{ header_links.task }}" class="btn btn-outline-secondary {% if primary_col == 'task' %}active{% endif %}">
+              Task
+              {% if primary_col == 'task' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
             </a>
-            <a href="?sort=category&dir={% if primary_col == 'category' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
-               class="btn btn-outline-secondary {% if primary_col == 'category' %}active{% endif %}">
-              Category 
-              {% if primary_col == 'category' %}
-                {% if primary_dir == 'asc' %}▲{% else %}▼{% endif %}
-              {% endif %}
+            <a href="{{ header_links.category }}" class="btn btn-outline-secondary {% if primary_col == 'category' %}active{% endif %}">
+              Category
+              {% if primary_col == 'category' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
             </a>
-            <a href="?sort=progress&dir={% if primary_col == 'progress' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
-               class="btn btn-outline-secondary {% if primary_col == 'progress' %}active{% endif %}">
-              Progress 
-              {% if primary_col == 'progress' %}
-                {% if primary_dir == 'asc' %}▲{% else %}▼{% endif %}
-              {% endif %}
+            <a href="{{ header_links.progress }}" class="btn btn-outline-secondary {% if primary_col == 'progress' %}active{% endif %}">
+              Progress
+              {% if primary_col == 'progress' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
             </a>
-            <a href="?sort=deadline&dir={% if primary_col == 'deadline' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
-               class="btn btn-outline-secondary {% if primary_col == 'deadline' %}active{% endif %}">
-              Deadline 
-              {% if primary_col == 'deadline' %}
-                {% if primary_dir == 'asc' %}▲{% else %}▼{% endif %}
-              {% endif %}
+            <a href="{{ header_links.deadline }}" class="btn btn-outline-secondary {% if primary_col == 'deadline' %}active{% endif %}">
+              Deadline
+              {% if primary_col == 'deadline' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
             </a>
           </div>
         </div>
+
         
         <!-- Desktop Table -->
         <div class="table-responsive d-none d-md-block">
