@@ -160,7 +160,7 @@
         <!-- Desktop Table -->
         <div class="table-responsive d-none d-md-block">
           {% if subtasks %}
-            <table class="table table-hover">
+            <table class="table table">
               <thead>
                 <tr>
                   {% with req=request.GET %}
@@ -203,10 +203,7 @@
                   <tr data-priority="{{ subtask.parent_task.priority.pk }}" data-status="{{ subtask.status }}" data-deadline="{% if subtask.parent_task.deadline %}{{ subtask.parent_task.deadline|date:'Y-m-d' }}{% endif %}">
                   <td>
                     <div class="d-flex align-items-center">
-                      <div class="form-check form-check-muted m-0 mr-3">
-                        <label class="form-check-label">
-                          <input type="checkbox" class="form-check-input" {% if subtask.status == 'Completed' %}checked{% endif %}>
-                        </label>
+
                       </div>
                       <div>
                         <h6 class="card-title {% if subtask.status == 'Completed' %}text-decoration-line-through{% endif %}">
