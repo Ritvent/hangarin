@@ -299,7 +299,12 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
     login_url = '/accounts/login/'
     
     def get_success_url(self):
-        return self.request.path
+        # Redirect to the category tasks view
+        try:
+            category_pk = self.object.category.pk
+            return reverse('category_tasks', args=[category_pk])
+        except Exception:
+            return reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -316,6 +321,14 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'task_form.html'
     success_url = reverse_lazy('dashboard')
     login_url = '/accounts/login/'
+
+    def get_success_url(self):
+        # Redirect back to the category tasks view
+        try:
+            category_pk = self.object.category.pk
+            return reverse('category_tasks', args=[category_pk])
+        except Exception:
+            return reverse_lazy('dashboard')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -333,7 +346,13 @@ class TaskDeleteView(LoginRequiredMixin, DeleteView):
     context_object_name = 'task'
     login_url = '/accounts/login/'
 
-
+    def get_success_url(self):
+        # Redirect back to the category tasks view after deletion
+        try:
+            category_pk = self.object.category.pk
+            return reverse('category_tasks', args=[category_pk])
+        except Exception:
+            return reverse_lazy('dashboard')
 # ========== CATEGORY CRUD VIEWS ==========
 
 class CategoryListView(LoginRequiredMixin, ListView):
@@ -381,7 +400,8 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
     login_url = '/accounts/login/'
     
     def get_success_url(self):
-        return self.request.path
+        # Redirect to the new category detail page
+        return reverse('category_detail', args=[self.object.pk])
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -398,6 +418,10 @@ class CategoryUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'category_form.html'
     success_url = reverse_lazy('category_list')
     login_url = '/accounts/login/'
+
+    def get_success_url(self):
+        # Redirect back to the category detail page (same category)
+        return reverse('category_detail', args=[self.object.pk])
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -434,7 +458,7 @@ class PriorityCreateView(LoginRequiredMixin, CreateView):
     login_url = '/accounts/login/'
     
     def get_success_url(self):
-        return self.request.path
+        return reverse_lazy('priority_list')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -449,8 +473,11 @@ class PriorityUpdateView(LoginRequiredMixin, UpdateView):
     model = Priority
     form_class = PriorityForm
     template_name = 'priority_form.html'
-    success_url = reverse_lazy('priority_list')
     login_url = '/accounts/login/'
+
+    def get_success_url(self):
+        return reverse_lazy('priority_list')
+
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -478,14 +505,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
     template_name = 'note_form.html'
     login_url = '/accounts/login/'
     
-    # success URL will send user to the category page after creating a task
     def get_success_url(self):
-        # redirect back to the category tasks view for the created task
-        try:
-            # Note is linked to a Task which belongs to a Category
-            return reverse('category_tasks', args=[self.object.task.category.pk])
-        except Exception:
-            return reverse_lazy('dashboard')
         return self.request.path
     
     def get_context_data(self, **kwargs):
@@ -512,8 +532,10 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView):
     model = Note
     form_class = NoteForm
     template_name = 'note_form.html'
-    success_url = reverse_lazy('dashboard')
     login_url = '/accounts/login/'
+
+    def get_success_url(self):
+        return self.request.path
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -527,9 +549,12 @@ class NoteDeleteView(LoginRequiredMixin, DeleteView):
     """View for deleting notes"""
     model = Note
     template_name = 'note_confirm_delete.html'
-    success_url = reverse_lazy('dashboard')
     context_object_name = 'note'
     login_url = '/accounts/login/'
+
+    def get_success_url(self):
+        return self.request.path
+
 
 
 class NoteListView(LoginRequiredMixin, ListView):
@@ -630,8 +655,10 @@ class SubTaskUpdateView(LoginRequiredMixin, UpdateView):
     model = SubTask
     form_class = SubTaskForm
     template_name = 'subtask_form.html'
-    success_url = reverse_lazy('dashboard')
     login_url = '/accounts/login/'
+
+    def get_success_url(self):
+        return self.request.path
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -645,10 +672,11 @@ class SubTaskDeleteView(LoginRequiredMixin, DeleteView):
     """View for deleting subtasks"""
     model = SubTask
     template_name = 'subtask_confirm_delete.html'
-    success_url = reverse_lazy('dashboard')
     context_object_name = 'subtask'
     login_url = '/accounts/login/'
 
+    def get_success_url(self):
+        return self.request.path
 
 class SubTaskListView(LoginRequiredMixin, ListView):
     """List all subtasks, with optional filtering by parent task via ?parent=<task_pk>."""
