@@ -3,6 +3,7 @@
 
 {% block content %}
 
+<!-- Statistics Cards -->
 <div class="row">
   <div class="col-6 col-md-3 mb-3 mb-md-4">
     <div class="card bg-dark text-light">
@@ -60,83 +61,313 @@
     </div>
   </div>
 </div>
-              <div class="col-lg-12 grid-margin stretch-card">
-                <div class="card">
+
+<!-- Category Filter -->
+<div class="row">
+  <div class="col-12 mb-3">
+    <div class="card">
+      <div class="card-body py-2">
+        <form method="get" class="d-flex align-items-center justify-content-between flex-wrap">
+          <label for="categoryFilter" class="mb-0 mr-2 text-muted small">Filter by Category:</label>
+          <div class="d-flex align-items-center flex-grow-1">
+            <select id="categoryFilter" name="category" class="form-control form-control-sm mr-2" onchange="this.form.submit()" style="max-width: 300px;">
+              <option value="">All Categories</option>
+              {% if categories %}
+                {% for cat in categories %}
+                  <option value="{{ cat.pk }}" {% if selected_category == cat.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.category_name }}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+            {% if selected_category %}
+              <a href="?" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tasks Table Section -->
+<div class="row">
+  <div class="col-lg-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title">All Tasks</h4>
+        <p class="card-description">Overview of your tasks and their progress</p>
+        
+        <!-- Search Bar -->
+        <div class="mb-3">
+          <form id="searchForm" method="get" action="">
+            <!-- Preserve category filter in search -->
+            {% if selected_category %}
+              <input type="hidden" name="category" value="{{ selected_category }}">
+            {% endif %}
+            <!-- Preserve sort parameters in search -->
+            {% if request.GET.sort %}
+              <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+            {% endif %}
+            {% if request.GET.dir %}
+              <input type="hidden" name="dir" value="{{ request.GET.dir }}">
+            {% endif %}
+            
+            <div class="input-group input-group-sm">
+              <input 
+                id="taskSearch"
+                name="q"
+                type="search" 
+                class="form-control form-control-sm text-light bg-dark border-secondary" 
+                placeholder="Search tasks by title or description"
+                value="{{ search_query|default:'' }}"
+                aria-label="Search tasks">
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit">
+                  <i class="mdi mdi-magnify"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Mobile Sort Buttons -->
+        <div class="d-block d-md-none mb-3">
+          <div class="btn-group btn-group-sm w-100" role="group">
+            <a href="{{ header_links.task }}" class="btn btn-outline-secondary {% if primary_col == 'task' %}active{% endif %}">
+              Task
+              {% if primary_col == 'task' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
+            </a>
+            <a href="{{ header_links.category }}" class="btn btn-outline-secondary {% if primary_col == 'category' %}active{% endif %}">
+              Category
+              {% if primary_col == 'category' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
+            </a>
+            <a href="{{ header_links.progress }}" class="btn btn-outline-secondary {% if primary_col == 'progress' %}active{% endif %}">
+              Progress
+              {% if primary_col == 'progress' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
+            </a>
+            <a href="{{ header_links.deadline }}" class="btn btn-outline-secondary {% if primary_col == 'deadline' %}active{% endif %}">
+              Deadline
+              {% if primary_col == 'deadline' %}{% if primary_dir == 'asc' %}  {% else %} {% endif %}{% endif %}
+            </a>
+          </div>
+        </div>
+
+        
+        <!-- Desktop Table -->
+        <div class="table-responsive d-none d-md-block">
+          <table class="table table-bordered" style="table-layout: fixed; width: 100%;">
+            <thead>
+              <tr>
+                <th style="width: 40%">
+                  <a href="?sort=task&dir={% if primary_col == 'task' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
+                    Task
+                    {% if primary_col == 'task' %}
+                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th style="width: 20%">
+                  <a href="?sort=category&dir={% if primary_col == 'category' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
+                    Category
+                    {% if primary_col == 'category' %}
+                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th style="width: 25%">
+                  <a href="?sort=progress&dir={% if primary_col == 'progress' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
+                    Progress
+                    {% if primary_col == 'progress' %}
+                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                <th style="width: 15%">
+                  <a href="?sort=deadline&dir={% if primary_col == 'deadline' and primary_dir == 'asc' %}desc{% else %}asc{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="text-decoration-none">
+                    Deadline
+                    {% if primary_col == 'deadline' %}
+                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="taskTableBody">
+              {% if task_rows %}
+                {% for row in task_rows %}
+                  <tr data-task="{{ row.task.title|lower }}" data-category="{{ row.task.category.category_name|lower }}" data-progress="{{ row.progress }}" data-deadline="{% if row.task.deadline %}{{ row.task.deadline|date:'Y-m-d' }}{% endif %}">
+                    <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ row.task.title }}</td>
+                    <td>{{ row.task.category.category_name }}</td>
+                    <td>
+                      <div class="progress">
+                        <div class="progress-bar {% if row.progress == 100 %}bg-success{% elif row.progress >= 50 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ row.progress }}%" aria-valuenow="{{ row.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                    </td>
+                    <td>{% if row.task.deadline %}{{ row.task.deadline|date:"M d, Y" }}{% endif %}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No tasks available</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        <!-- End Desktop Table -->
+
+        <!-- Mobile Task Cards -->
+        <div class="d-block d-md-none mt-4" id="mobileTaskContainer">
+          {% if task_rows %}
+            {% for row in task_rows %}
+              <div class="col-12 mb-3 mobile-task-card" data-task="{{ row.task.title|lower }}" data-category="{{ row.task.category.category_name|lower }}" data-progress="{{ row.progress }}" data-deadline="{% if row.task.deadline %}{{ row.task.deadline|date:'Y-m-d' }}{% endif %}">
+                <div class="card bg-dark text-light border-left-mobile">
                   <div class="card-body">
-                    <h4 class="card-title">Bordered table</h4>
-                    <p class="card-description"> Add class <code>.table-bordered</code>
-                    </p>
-                    <div class="table-responsive">
-                      <table class="table table-bordered" style="table-layout: fixed; width: 100%;">
-                        <thead>
-                          <tr>
-                                <th style="width: 40%">
-                                  <a href="{{ header_links.task }}">Task
-                                    {% if primary_col == 'task' %}
-                                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
-                                    {% endif %}
-                                  </a>
-                                </th>
-                                <th style="width: 20%">
-                                  <a href="{{ header_links.category }}">Category
-                                    {% if primary_col == 'category' %}
-                                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
-                                    {% endif %}
-                                  </a>
-                                </th>
-                                <th style="width: 25%">
-                                  <a href="{{ header_links.progress }}">Progress
-                                    {% if primary_col == 'progress' %}
-                                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
-                                    {% endif %}
-                                  </a>
-                                </th>
-                                <th style="width: 15%">
-                                  <a href="{{ header_links.deadline }}">Deadline
-                                    {% if primary_col == 'deadline' %}
-                                      {% if primary_dir == 'asc' %} ▲ {% else %} ▼ {% endif %}
-                                    {% endif %}
-                                  </a>
-                                </th>
-                              </tr>
-                        </thead>
-                        <tbody>
-                        {% if task_rows %}
-                          {% for row in task_rows %}
-                            <tr>
-                              <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ row.task.title }}</td>
-                              <td>{{ row.task.category.category_name }}</td>
-                              <td>
-                                <div class="progress">
-                                  <div class="progress-bar {% if row.progress == 100 %}bg-success{% elif row.progress >= 50 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ row.progress }}%" aria-valuenow="{{ row.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                              </td>
-                              <td>{% if row.task.deadline %}{{ row.task.deadline|date:"M d, Y" }}{% endif %}</td>
-                            </tr>
-                          {% endfor %}
-                        {% else %}
-                          <!-- fallback sample rows if no tasks present -->
-                          <tr>
-                            <td> Herman Beck </td>
-                            <td>
-                              <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                              </div>
-                            </td>
-                            <td> May 15, 2015 </td>
-                          </tr>
-                        {% endif %}
-                        </tbody>
-                      </table>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <h6 class="mb-0 flex-grow-1 mr-2">{{ row.task.title }}</h6>
+                      <span class="badge badge-primary">{{ row.task.category.category_name }}</span>
                     </div>
+                    
+                    <div class="mb-3">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-muted">Progress</span>
+                        <span class="small font-weight-bold">{{ row.progress }}%</span>
+                      </div>
+                      <div class="progress" style="height: 8px;">
+                        <div class="progress-bar {% if row.progress == 100 %}bg-success{% elif row.progress >= 50 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ row.progress }}%" aria-valuenow="{{ row.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                    </div>
+                    
+                    {% if row.task.deadline %}
+                      <div class="d-flex align-items-center">
+                        <i class="mdi mdi-calendar-clock mr-2 text-muted"></i>
+                        <span class="small text-muted">Due: {{ row.task.deadline|date:"M d, Y" }}</span>
+                      </div>
+                    {% endif %}
                   </div>
                 </div>
               </div>
-            
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-5">
+              <div class="icon icon-box-secondary mx-auto mb-3" style="width: 80px; height: 80px;">
+                <span class="mdi mdi-format-list-checks icon-item" style="font-size: 40px;"></span>
+              </div>
+              <h5 class="text-muted">No tasks yet</h5>
+              <p class="text-muted mb-4">Start by creating your first task</p>
+            </div>
+          {% endif %}
+        </div>
+        <!-- End Mobile Task Cards -->
 
-            
-                    
-                   
-
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
+
+{% block extra_scripts %}
+<style>
+  /* Mobile responsive styles */
+  @media (max-width: 767px) {
+    .border-left-mobile {
+      border-left: 3px solid #007bff !important;
+    }
+    
+    .card-title {
+      font-size: 1rem;
+    }
+    
+    h3 {
+      font-size: 1.75rem;
+    }
+    
+    h6 {
+      font-size: 0.875rem;
+    }
+    
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+    
+    .progress {
+      height: 8px;
+    }
+    
+    .card-body {
+      padding: 1rem;
+    }
+    
+    .sort-btn {
+      font-size: 0.75rem;
+      padding: 0.375rem 0.25rem;
+    }
+    
+    .sort-icon {
+      font-size: 0.7rem;
+      margin-left: 2px;
+    }
+  }
+  
+  @media (max-width: 575px) {
+    h3 {
+      font-size: 1.5rem;
+    }
+    
+    .text-muted.font-weight-normal {
+      font-size: 0.75rem;
+    }
+    
+    .icon-box-secondary,
+    .icon-box-success,
+    .icon-box-warning,
+    .icon-box-danger {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .icon-item {
+      font-size: 1.25rem;
+    }
+    
+    /* Category filter mobile adjustments */
+    .card-body form {
+      flex-direction: column;
+      align-items: stretch !important;
+    }
+    
+    .card-body form label {
+      margin-bottom: 0.5rem;
+    }
+    
+    .card-body form .d-flex {
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    .card-body form select {
+      max-width: 100% !important;
+      margin-bottom: 0.5rem;
+    }
+    
+    .card-body form .btn {
+      width: 100%;
+    }
+  }
+  
+  .sort-btn.active,
+  a.btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+  
+  a.btn {
+    text-decoration: none;
+  }
+</style>
+
+{% endblock extra_scripts %}
